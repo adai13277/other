@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>China Sentiment Heatmap</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+</head>
+<body>
+    <div id="main" style="width: 100%; height: 100vh;"></div>
+    <script>
+        // 加载舆情数据
+        fetch('sentiment_data.json')
+            .then(response => response.json())
+            .then(data => {
+                // 初始化ECharts实例
+                var myChart = echarts.init(document.getElementById('main'));
+
+                // 配置项和数据
+                var option = {
+                    title: {
+                        text: 'China Sentiment Heatmap',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 1,
+                        left: 'left',
+                        top: 'bottom',
+                        text: ['High', 'Low'],
+                        calculable: true,
+                        inRange: {
+                            color: ['#d94e5d', '#eac736', '#50a3ba']
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'Sentiment',
+                            type: 'map',
+                            mapType: 'china',
+                            roam: true,
+                            label: {
+                                show: true
+                            },
+                            data: Object.keys(data).map(key => ({name: key, value: data[key]}))
+                        }
+                    ]
+                };
+
+                // 使用刚指定的配置项和数据显示图表
+                myChart.setOption(option);
+            });
+    </script>
+</body>
+</html>

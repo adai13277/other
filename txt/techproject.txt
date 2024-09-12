@@ -1,0 +1,5 @@
+HivisionIDPhotos  证件照生成AI
+MusicFree  开源音乐播放器
+UpscayI 把图片变高清算法
+UmiOCR 图片文字识别
+rustdesk 私有远程软件
