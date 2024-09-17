@@ -15,6 +15,14 @@ unset https_proxy
 \\MacdeMacBook-Pro.local
 
 
+
+http://172.18.197.73:3131/229553
+
+github token --public 用于访问private仓库
+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
+git clone https://adai13277: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@github.com/adai13277/other.git
+
+
 知网
 4516946623136
 5407548
