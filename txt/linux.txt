@@ -1,0 +1,45 @@
+
+
+查看ip
+curl --socks5 172.18.197.73:7890 https://httpbin.org/ip
+
+
+
+export http_proxy="http://172.18.197.73:7890" \
+export https_proxy="http://172.18.197.73:7890"
+unset http_proxy \
+unset https_proxy
+
+共享文件夹
+
+\\MacdeMacBook-Pro.local
+
+
+
+http://172.18.197.73:3131/229553
+
+github token --public 用于访问private仓库
+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
+git clone https://adai13277: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@github.com/adai13277/other.git
+
+
+知网
+4516946623136
+5407548
+
+
+mysql.server start：启动 MySQL 服务器。
+mysql.server stop: 停止 MySQL.
+
+
+github Token
+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
+
+
+pyenv virtualenv 3.9.6 myenv
+
+
+
+
+
+
