@@ -1,8 +1,8 @@
 @echo off
 REM 这是一个批处理文件，用于激活Conda环境并运行Python脚本
 
-echo 正在切换到目标目录...
-cd /d "C:\Users\Mac\Desktop\Sublime Text\note"
+echo 正在切换到批处理所在目录...
+cd /d "%~dp0"
 
 echo 正在激活Conda环境 'venv313'...
 CALL conda activate venv313

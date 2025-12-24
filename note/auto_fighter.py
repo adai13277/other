@@ -2,12 +2,24 @@
 import pyautogui
 import time
 import random
-from config import SHORTCUTS,SHORTCUTS1,SHORTCUTS2
+from config import SHORTCUTS,SHORTCUTS1,SHORTCUTS2,action_sequence
 
 class AutoFighter:
     def __init__(self):
         # 状态跟踪（用于判断何时吃药/补Buff）
         self.shortcuts = SHORTCUTS1
+
+        self.action_sequence = []
+
+        # 动态添加第一个对象（使用字典结构）
+        self.action_sequence.append({
+            "function": "apply_buffs1",
+            "args": [],
+            "kwargs": {}
+        })
+
+        # 将 action_sequence 数组中的所有对象添加到 self.action_sequence
+        self.action_sequence.extend(action_sequence)
 
         # 初始化 last_release_times
         self.last_release_times = {}
@@ -236,7 +248,16 @@ class AutoFighter:
                 self._keys_down(['d'])
         self._keys_up([direction,'d'])
 
+    def loop_att(self,keys:str,lt:float,rt:float):
+        self._keys_down(keys)
 
+        self.attack(['left'],3)
+        self.attack(['left'],lt - 3)
+        self.attack(['right'],rt)
+
+        self._keys_up(keys)
+        if len(keys) == 1:
+            self.attack(['down'],0.5)
     # ------------------------------ 主循环逻辑 ------------------------------
     def run(self):
         print(f"[{time.strftime('%H:%M:%S')}] 自动打怪启动...")
@@ -246,47 +267,21 @@ class AutoFighter:
 
         try:
             while not self.should_stop():
-                current_time = time.time()
-
-                # 1. 更新Buff（按间隔）
-                self.apply_buffs1()
-
-                #self.move(direction,0.2)
-
-                # self.attack(['a','right'],4)
-                # self.attack(['a','right','d'],11)
-                # self.attack(['left','d'],0.03)
-                # self.attack(['a','left','d'],10.5)
-
-                # self.playDrug('right',5.5)
-                # self.playDrug('left',5.8)
-
-
-                # ran = random.random()
-                # ran1 = random.random()
-                # self.attack(['a','right','space'],2)
-
-                # self.attack(['a','left','space'],2)
-                # self.attack(['a'],3)
-                # self.attack(['a'],35)
-
-                # self.attack(['a'],5)
-
-                self._keys_down(['a'])
-
-                for i in range(6):
-                    self.attack(['left'],3)
-                    self.attack(['right'],3)
-
-                self._keys_up(['a'])
-                self.attack(['down'],0.5)
-                
-                # self.turnAround()
-                
-                #self.turnAround()
-                
+                for action in self.action_sequence:
+                    func_name = action["function"]
+                    args = action.get("args", [])
+                    kwargs = action.get("kwargs", {})
+                    
+                    # 获取并调用函数
+                    func = getattr(self, func_name, None)
+                    if callable(func):
+                        print(f"执行: {func_name} 参数: {args} {kwargs}")
+                        func(*args, **kwargs)
+                    else:
+                        print(f"警告: 找不到函数 {func_name}")
+                    
                 # 短暂等待下一轮循环
-                # self._wait(0.1)aazz1112
+                self._wait(0.1)
         
         except KeyboardInterrupt:
             print("程序被用户中断...")
