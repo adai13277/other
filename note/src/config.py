@@ -1,5 +1,14 @@
 # config.py
-import time
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+action_sequence = [{
+            "function": "loop_att",
+            "args": [['a','d'],8,8],
+            "kwargs": {}
+        }]
 
 # ============================== 快捷键配置 ==============================
 # 按游戏内实际设置修改（主键盘/小键盘均可）
@@ -13,19 +22,5 @@ SHORTCUTS = [
                 {"key": "6", "interval": 550},
                 {"key": "7", "interval": 550}
             ]
-SHORTCUTS1 = [
-                {"key": "q", "interval": -1},
-                {"key": "w", "interval": 300},
-                {"key": "e", "interval": 888},
-                {"key": "r", "interval": -1},
-                {"key": "t", "interval": -1},
-                {"key": "y", "interval": -1},
-                {"key": "6", "interval": -1},
-                {"key": "7", "interval": 870}
-            ]
 
-SHORTCUTS2 = {
-    "buffs": ["q",'w','e','r','t','1','2','7'],
-    "buff_intervals":[600,300,888,888,888,-1,-1,900]
-}
-
+logger.debug("配置加载完成")

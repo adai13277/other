@@ -2,57 +2,54 @@
 import pyautogui
 import time
 import random
-from config import SHORTCUTS,SHORTCUTS1,SHORTCUTS2,action_sequence
+import logging
+
+# 获取logger实例
+logger = logging.getLogger(__name__)
+
+# 修复导入问题
+try:
+    from config import SHORTCUTS, action_sequence
+except ImportError as e:
+    logger.critical(f"导入config失败: {str(e)}")
+    sys.exit(1)
 
 class AutoFighter:
     def __init__(self):
-        # 状态跟踪（用于判断何时吃药/补Buff）
-        self.shortcuts = SHORTCUTS1
-
-        self.action_sequence = []
-
-        # 动态添加第一个对象（使用字典结构）
-        self.action_sequence.append({
-            "function": "apply_buffs1",
-            "args": [],
-            "kwargs": {}
-        })
-
-        # 将 action_sequence 数组中的所有对象添加到 self.action_sequence
-        self.action_sequence.extend(action_sequence)
-
-        # 初始化 last_release_times
-        self.last_release_times = {}
-        current_time = time.time()
-        for config in self.shortcuts:
-            buff_key = config["key"]
-            interval = config["interval"]
+        try:
+            logger.info("初始化AutoFighter")
+            self.shortcuts = SHORTCUTS
+            self.action_sequence = []
+            self.action_sequence.append({"function": "apply_buffs1", "args": [], "kwargs": {}})
+            self.action_sequence.extend(action_sequence)
             
-            # 检查条件：大于100的三位数，且十位和个位相等
-            if isinstance(interval, int) and interval > 100 and 100 <= interval <= 999:
-                str_num = str(interval)
-                if len(str_num) == 3 and str_num[1] == str_num[0]:
-                    # 计算新值：减去百位和十位
-                    hundreds = int(str_num[0]) * 100
-                    tens = int(str_num[1]) * 10
-                    if str_num[2] != 0:
-                        new_interval = hundreds + tens
-                    else:
-                        new_interval = hundreds + tens - 5
-                    
-                    # 设置初始时间为当前时间减去新间隔
-
-                    self.last_release_times[buff_key] = current_time - new_interval
-
-                    # print(f"初始化 {buff_key}: 原间隔={interval}, 新间隔={new_interval}, 设置时间={self.last_release_times[buff_key]}")
-                    continue
-            
-            # 其他情况直接记录当前时间（经过时间为0）
-            self.last_release_times[buff_key] = current_time
-            
-
-
-        self.running = True
+            self.last_release_times = {}
+            current_time = time.time()
+            for config in self.shortcuts:
+                buff_key = config["key"]
+                interval = config["interval"]
+                
+                if isinstance(interval, int) and interval > 100 and 100 <= interval <= 999:
+                    str_num = str(interval)
+                    if len(str_num) == 3 and str_num[1] == str_num[0]:
+                        hundreds = int(str_num[0]) * 100
+                        tens = int(str_num[1]) * 10
+                        if str_num[2] != '0':
+                            new_interval = hundreds + tens
+                        else:
+                            new_interval = hundreds + tens - 5
+                        
+                        self.last_release_times[buff_key] = current_time - new_interval
+                        logger.debug(f"初始化 {buff_key}: 原间隔={interval}, 新间隔={new_interval}")
+                        continue
+                
+                self.last_release_times[buff_key] = current_time
+                
+            self.running = True
+            logger.info("AutoFighter初始化完成")
+        except Exception as e:
+            logger.exception("初始化时发生错误:")
+            raise
 
 
 
@@ -140,26 +137,14 @@ class AutoFighter:
                 self._wait(1)
                 self._press_key(buff_key,0.5)
 
-    # ------------------------------ 移动控制 ------------------------------
-    def move(self, direction: str, duration: float = None):
-        """
-        按住方向键移动
-        :param direction: 方向（'up'/'down'/'left'/'right'）
-        :param duration: 移动时间（默认用配置值）
-        """
-        pyautogui.keyDown(direction)
-        pyautogui.keyDown(self.shortcuts["z"])
-        time.sleep(duration)
-        pyautogui.keyUp(self.shortcuts["z"])
-        pyautogui.keyUp(direction)
-
-        self.apply_buffs()
-
     # ------------------------------ 停止条件 ------------------------------
     def should_stop(self):
-        """检查是否触发停止条件（按ESC键）"""
-        return pyautogui.keyDown('esc')
-
+        try:
+            import keyboard
+            return keyboard.is_pressed('esc')  # 直接检测ESC键状态
+        except Exception as e:
+            logger.error(f"键盘检测失败: {e}")
+            return False
     # ------------------------------ 技能释放 ------------------------------
     def attack(self,k,t):
         self._hold_keys(k,t)
@@ -180,10 +165,6 @@ class AutoFighter:
         self._hold_keys(['up','d'],0.05)
 
         self._keys_down(stopArr)
-
-    def toUp(self,stopArr:str):
-        self._wait(0.35)
-        self._hold_keys(['down','space'],0.23)
 
     #先放爆炸再放毒,用来刷红船专用
     def playDrug(self,direction:str,t:float):
