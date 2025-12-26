@@ -231,14 +231,38 @@ class AutoFighter:
 
     def loop_att(self,keys:str,lt:float,rt:float):
         self._keys_down(keys)
-
-        self.attack(['left'],3)
-        self.attack(['left'],lt - 3)
+        self.attack(['left'],lt)
         self.attack(['right'],rt)
 
         self._keys_up(keys)
         if len(keys) == 1:
             self.attack(['down'],0.5)
+
+    def loop_att1(self,keys:str,dt:float,at:float):
+        self._keys_down(keys)
+        self.attack(['left','d'],dt)
+        self.attack(['right'],at)
+
+        self.attack(['right','d'],dt)
+        self.attack(['left'],at)
+
+        self._keys_up(keys)
+        # if len(keys) == 1:
+        #     self.attack(['down'],0.5)
+
+    #向direction攻击t1秒后，向另一个方向瞬移t2秒
+    def dir_att(self,direction:str,keys:str,t1:float,t2:float):
+        other_direction = self.get_other_direction(direction)
+
+        new_keys = keys + [direction]
+        self.attack(new_keys,t1)
+        self.attack([other_direction,'d'],t2)
+
+    def get_other_direction(self,direction):
+        if direction == 'right':
+            return 'left'
+        else:
+            return 'right'
     # ------------------------------ 主循环逻辑 ------------------------------
     def run(self):
         print(f"[{time.strftime('%H:%M:%S')}] 自动打怪启动...")
