@@ -161,11 +161,14 @@ class AutoFighter:
         self._keys_up(stopArr)
 
         self._wait(0.35)
-        self._hold_keys(['space'],0.23)
+        self._hold_keys(['space'],0.18)
         self._hold_keys(['up','d'],0.05)
 
         self._keys_down(stopArr)
 
+    def playDrug1(self,t1:float,t2:float):
+        self.playDrug('left',t1)
+        self.playDrug('right',t2)
     #先放爆炸再放毒,用来刷红船专用
     def playDrug(self,direction:str,t:float):
         self._keys_down([direction,'d'])
@@ -179,9 +182,9 @@ class AutoFighter:
             if ran < 1 :   
             #     #概率上瞬移
                 passT = time.time() - startT
-                if direction == 'left' and  (passT < 0.5 or (passT >3)):
+                if direction == 'left' and  (passT < 0.5 or (passT >3 and passT < 4.5)):
                     continue 
-                if direction == 'right' and  (passT < 1.2 or passT >3 or (passT >2 and passT <3)):
+                if direction == 'right' and  (passT < 1 or passT >2.2 or (passT >2 and passT <3)):
                     continue  
                 self._keys_up(['d'])
                 self._wait(0.35)
