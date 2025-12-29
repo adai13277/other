@@ -1,5 +1,6 @@
 # auto_fighter.py
 import pyautogui
+pyautogui.FAILSAFE = False  # Disable fail-safe
 import time
 import random
 import logging
@@ -59,17 +60,17 @@ class AutoFighter:
         pyautogui.press(key)
         time.sleep(delay)
 
-    def _hold_keys(self, keys: str, duration: float = 0):
-        """按住键持续一段时间"""
-        for key in keys:
-            pyautogui.keyDown(key)
-    
-        # 等待指定时间
-        time.sleep(duration)
-        
-        # 同时释放所有键
-        for key in keys:
-            pyautogui.keyUp(key)
+    def _hold_keys(self, keys, duration):
+        try:
+            for key in keys:
+                pyautogui.keyDown(key)
+            time.sleep(duration)
+        finally:
+            for key in keys:
+                try:
+                    pyautogui.keyUp(key)
+                except:
+                    pass  # Ignore errors during key release
 
     def _tap_keys(self, keys: str, t: float , interval: float = 0.1):
         tt = 0
@@ -172,7 +173,7 @@ class AutoFighter:
     #先放爆炸再放毒,用来刷红船专用
     def playDrug(self,direction:str,t:float):
         self._keys_down([direction,'d'])
-        count = 8
+        count = 3
         startT = time.time()
         for i in range(count):
             if time.time() - startT > t:
@@ -187,9 +188,9 @@ class AutoFighter:
                 if direction == 'right' and  (passT < 1 or passT >2.2 or (passT >2 and passT <3)):
                     continue  
                 self._keys_up(['d'])
-                self._wait(0.35)
+                # self._wait(0.1)
 
-                self._hold_keys(['space'],0.25)
+                self._hold_keys(['space'],0.11)
                 self._hold_keys(['up','d'],0.05)
 
                 self._keys_down(['d'])
@@ -262,18 +263,20 @@ class AutoFighter:
 
             self.ran_move_attak(['a'],stand_t)
 
-            self.attack([direction,'a','d'],move_t * 1.8)
-            self.attack([direction,'s','d'],move_t * 0.2)
+            self.attack([direction,'a','d'],move_t * 1)
+            self.ran_move_attak(['a'],move_t * 0.2)
+            self.attack([direction,'a','d'],move_t * 1)
+            self.ran_move_attak(['a'],move_t * 0.2)
             self.attack([other_direction,'a','d'],move_t * 0.8)
 
     #在一个总的tt内，按住keys键，在短时间内快速左右移动,移动范围缩放Scale
     def ran_move_attak(self,keys:str,tt:float,scale:float = 0.8):
         self._keys_down(keys)
-
-        current_time = time.time()
-        while time.time() - current_time < tt:
-            self.attack(['left'],random.random() * scale)
-            self.attack(['right'],random.random() * scale)
+        self._wait(tt)
+        # current_time = time.time()
+        # while time.time() - current_time < tt:
+        #     self.attack(['left'],random.random() * scale)
+        #     self.attack(['right'],random.random() * scale)
 
         self._keys_up(keys)
 
