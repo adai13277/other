@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 '''
 action_sequence = [{
             "function": "loop_att2",
-            "args": [1,1.4]
+            "args": [1,1.6]
         }]
 
 # ============================== 快捷键配置 ==============================
@@ -58,7 +58,7 @@ SHORTCUTS = [
                 {"key": "w", "interval": 888},
                 {"key": "e", "interval": 888},
                 {"key": "r", "interval": 888},
-                {"key": "t", "interval": 888},
+                {"key": "t", "interval": 777},
                 {"key": "y", "interval": 888},
                 {"key": "5", "interval": 550},
                 {"key": "6", "interval": 550},
