@@ -10,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 # 修复导入问题
 try:
-    from config import SHORTCUTS, action_sequence
+    from config import SHORTCUTS, action_sequence,is_buff
 except ImportError as e:
     logger.critical(f"导入config失败: {str(e)}")
-    sys.exit(1)
+    # sys.exit(1)
 
 class AutoFighter:
     def __init__(self):
@@ -21,7 +21,8 @@ class AutoFighter:
             logger.info("初始化AutoFighter")
             self.shortcuts = SHORTCUTS
             self.action_sequence = []
-            self.action_sequence.append({"function": "apply_buffs1", "args": [], "kwargs": {}})
+            if is_buff:
+                self.action_sequence.append({"function": "apply_buffs1", "args": [], "kwargs": {}})
             self.action_sequence.extend(action_sequence)
             
             self.last_release_times = {}
@@ -158,14 +159,30 @@ class AutoFighter:
             arr.append('space')
         self._hold_keys(arr,t)
 
-    def toUp(self,stopArr:str):
-        self._keys_up(stopArr)
+    def toUp(self):
 
         self._wait(0.35)
         self._hold_keys(['space'],0.18)
         self._hold_keys(['up','d'],0.05)
 
-        self._keys_down(stopArr)
+
+    def toDown(self):
+
+        self._hold_keys(['down','space'],0.18)
+
+    def recAttack(self,keys:str,t:float):
+        arr1 = ['right']
+        arr1.extend(keys)
+        arr2 = ['left']
+        arr2.extend(keys)
+        print(arr2)
+
+        self.attack(arr1,t)
+        self.toUp()
+        self.attack(['space'],0.2)
+        self.attack(arr2,t)
+        self.attack(['space'],0.2)
+        self.toDown()
 
     def playDrug1(self,t1:float,t2:float):
         self.playDrug('left',t1)
@@ -242,6 +259,13 @@ class AutoFighter:
         if len(keys) == 1:
             self.attack(['down'],0.5)
 
+    def loop_att(self,keys:str,lt:float,rt:float,delay:float):
+        self._keys_down(keys)
+        self.attack(['left'],lt)
+        self.attack(['right'],rt)
+
+        self._keys_up(keys)
+
     #a向闪现dt，b向攻击at
     def loop_att1(self,keys:str,dt:float,at:float):
         self._keys_down(keys)
@@ -254,6 +278,7 @@ class AutoFighter:
         self._keys_up(keys)
         # if len(keys) == 1:
         #     self.attack(['down'],0.5)
+
 
     # ran_move_attak ->stand_t, +X->2move_t，-X ->move_t
     def loop_att2(self,stand_t:float,move_t:float):
