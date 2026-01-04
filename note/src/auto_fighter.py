@@ -280,7 +280,7 @@ class AutoFighter:
         #     self.attack(['down'],0.5)
 
 
-    # ran_move_attak ->stand_t, +X->2move_t，-X ->move_t
+    # ran_move_attak ->stand_t, +X->2move_t，-X ->move_t ，牧师刷pw专用
     def loop_att2(self,stand_t:float,move_t:float):
 
         for direction in ['left','right']:
@@ -291,17 +291,16 @@ class AutoFighter:
             self.attack([direction,'a','d'],move_t * 1)
             self.ran_move_attak(['a'],move_t * 0.2)
             self.attack([direction,'a','d'],move_t * 1)
-            self.ran_move_attak(['a'],move_t * 0.2)
+            # self.ran_move_attak(['a'],move_t * 0.2)
             self.attack([other_direction,'a','d'],move_t * 0.8)
 
     #在一个总的tt内，按住keys键，在短时间内快速左右移动,移动范围缩放Scale
     def ran_move_attak(self,keys:str,tt:float,scale:float = 0.8):
         self._keys_down(keys)
-        self._wait(tt)
-        # current_time = time.time()
-        # while time.time() - current_time < tt:
-        #     self.attack(['left'],random.random() * scale)
-        #     self.attack(['right'],random.random() * scale)
+        current_time = time.time()
+        while time.time() - current_time < tt:
+            self.attack(['left'],random.random() * scale)
+            self.attack(['right'],random.random() * scale)
 
         self._keys_up(keys)
 
