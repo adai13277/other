@@ -9,7 +9,7 @@ CALL conda activate venv313
 
 echo 正在以交互模式运行 main.py...
 echo -------------------------------------
-python -i main.py
+python -i main.py --config 1
 echo -------------------------------------
 
 echo.

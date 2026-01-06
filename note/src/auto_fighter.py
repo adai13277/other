@@ -4,26 +4,56 @@ pyautogui.FAILSAFE = False  # Disable fail-safe
 import time
 import random
 import logging
+import threading
 
 # 获取logger实例
 logger = logging.getLogger(__name__)
 
-# 修复导入问题
-try:
-    from config import SHORTCUTS, action_sequence,is_buff
-except ImportError as e:
-    logger.critical(f"导入config失败: {str(e)}")
-    # sys.exit(1)
-
 class AutoFighter:
-    def __init__(self):
+    def getRunTime(self):
+        return self.runTime
+
+    #输出配置信息
+    def format_config_output(self,config):
+        # 1. 提取核心信息
+        run_time = config["runTime"]  # 总运行时长（秒）
+        action = config["action_sequence"][0]  # 核心动作（假设只有一个）
+        shortcuts = [sc for sc in config["SHORTCUTS"] if sc["interval"] != -1]  # 过滤禁用的快捷键
+        
+        # 2. 构建小白友好描述
+        output_lines = []
+        output_lines.append("配置文件加载完成")
+        func_name = action["function"]
+        args = action["args"]
+        output_lines.append("  动作：{}，参数：{}".format(func_name, args))
+        
+        output_lines.append("\n【有效快捷键】（仅显示启用的按键）")
+        if not shortcuts:
+            output_lines.append("  无启用的快捷键（所有按键已禁用）")
+        else:
+            for sc in shortcuts:
+                key = sc["key"]
+                interval_s = sc["interval"]
+                output_lines.append(
+                    f"  按键【{key}】：每 {interval_s} 秒按1次、"
+                )
+        
+        # 3. 拼接日志输出（用换行符分隔，保持整洁）
+        return "\n".join(output_lines)
+
+    def __init__(self,config_arg:str):
         try:
             logger.info("初始化AutoFighter")
-            self.shortcuts = SHORTCUTS
+
+            #加载配置
+            from config import CONFIGS
+            self.shortcuts = CONFIGS[config_arg]["SHORTCUTS"]
             self.action_sequence = []
-            if is_buff:
-                self.action_sequence.append({"function": "apply_buffs1", "args": [], "kwargs": {}})
-            self.action_sequence.extend(action_sequence)
+            self.is_buff  = CONFIGS[config_arg]["is_buff"]
+            self.action_sequence.extend(CONFIGS[config_arg]["action_sequence"])
+
+            self.runTime = CONFIGS[config_arg]["runTime"]
+            logger.info(f"已加载配置: {self.format_config_output(CONFIGS[config_arg])}")
             
             self.last_release_times = {}
             current_time = time.time()
@@ -42,11 +72,12 @@ class AutoFighter:
                             new_interval = hundreds + tens - 5
                         
                         self.last_release_times[buff_key] = current_time - new_interval
-                        logger.debug(f"初始化 {buff_key}: 原间隔={interval}, 新间隔={new_interval}")
+                        # logger.debug(f"初始化 {buff_key}: 原间隔={interval}, 新间隔={new_interval}")
                         continue
                 
                 self.last_release_times[buff_key] = current_time
                 
+            self.stop_event = threading.Event()
             self.running = True
             logger.info("AutoFighter初始化完成")
         except Exception as e:
@@ -58,6 +89,11 @@ class AutoFighter:
     # ------------------------------ 基础键盘操作 ------------------------------
     def _press_key(self, key: str, delay: float = 0):
         """按下并释放单个键，可选延迟"""
+        pyautogui.press(key)
+        time.sleep(delay)
+    def _press_key_continue(self, key: str,t: delay: float = 0.1):
+        
+
         pyautogui.press(key)
         time.sleep(delay)
 
@@ -73,7 +109,9 @@ class AutoFighter:
                 except:
                     pass  # Ignore errors during key release
 
+
     def _tap_keys(self, keys: str, t: float , interval: float = 0.1):
+        """不断交替按下keys中的每一个按键，持续t秒，交替间隔默认为0.1"""
         tt = 0
         current_time = time.time()
         while time.time() - current_time < t:
@@ -141,12 +179,11 @@ class AutoFighter:
 
     # ------------------------------ 停止条件 ------------------------------
     def should_stop(self):
-        try:
-            import keyboard
-            return keyboard.is_pressed('esc')  # 直接检测ESC键状态
-        except Exception as e:
-            logger.error(f"键盘检测失败: {e}")
-            return False
+        return self.stop_event.is_set()
+
+    def request_stop(self):
+        self.stop_event.set()
+        self.running = False
     # ------------------------------ 技能释放 ------------------------------
     def attack(self,k,t):
         self._hold_keys(k,t)
@@ -172,17 +209,26 @@ class AutoFighter:
 
     def recAttack(self,keys:str,t:float):
         arr1 = ['right']
-        arr1.extend(keys)
+        # arr1.extend(keys)
         arr2 = ['left']
-        arr2.extend(keys)
-        print(arr2)
-
-        self.attack(arr1,t)
-        self.toUp()
-        self.attack(['space'],0.2)
-        self.attack(arr2,t)
-        self.attack(['space'],0.2)
-        self.toDown()
+        # arr2.extend(keys)
+        # print(arr2)
+        self._keys_down(keys)
+        self._press_key(['right'],0.5)
+        self._press_key(['right'],0.5)
+        self._press_key(['space'],0.5)
+        self._press_key(['right'],0.5)
+        self._press_key(['down'],0.5)
+        self._press_key(['left'],0.5)
+        self._press_key(['left'],0.5)
+        self._press_key(['left'],0.5)
+        self._press_key(['up'],0.5)
+        # self.toUp()
+        # self.attack(['space'],0.2)
+        # self.attack(arr2,t)
+        # self.attack(['space'],0.2)
+        # self.toDown()
+        self._keys_up(keys)
 
     def playDrug1(self,t1:float,t2:float):
         self.playDrug('left',t1)
@@ -250,34 +296,28 @@ class AutoFighter:
                 self._keys_down(['d'])
         self._keys_up([direction,'d'])
 
+    #左右各打几秒，循环6次，最后跳跃一下
     def loop_att(self,keys:str,lt:float,rt:float):
         self._keys_down(keys)
-        self.attack(['left'],lt)
-        self.attack(['right'],rt)
+
+        for i in range(6):
+            self.attack(['left'],lt)
+            self.attack(['right'],rt)
 
         self._keys_up(keys)
-        if len(keys) == 1:
-            self.attack(['down'],0.5)
+        
+        self.attack(['down'],0.5)
 
-    def loop_att(self,keys:str,lt:float,rt:float,delay:float):
-        self._keys_down(keys)
-        self.attack(['left'],lt)
-        self.attack(['right'],rt)
-
-        self._keys_up(keys)
 
     #a向闪现dt，b向攻击at
     def loop_att1(self,keys:str,dt:float,at:float):
         self._keys_down(keys)
-        self.attack(['left','d'],dt)
-        self.attack(['right'],at)
-
-        self.attack(['right','d'],dt)
-        self.attack(['left'],at)
+        for direction in ['left','right']:
+            other_direction = self.get_other_direction(direction)
+            self.attack([direction,'d'],dt)
+            self.attack([other_direction],at)
 
         self._keys_up(keys)
-        # if len(keys) == 1:
-        #     self.attack(['down'],0.5)
 
 
     # ran_move_attak ->stand_t, +X->2move_t，-X ->move_t ，牧师刷pw专用
@@ -318,6 +358,12 @@ class AutoFighter:
             return 'left'
         else:
             return 'right'
+
+    def guaji(self,t:float):
+        self._press_key(['up'],t)
+        self._press_key(['down'],t)
+
+
     # ------------------------------ 主循环逻辑 ------------------------------
     def run(self):
         print(f"[{time.strftime('%H:%M:%S')}] 自动打怪启动...")
@@ -327,6 +373,9 @@ class AutoFighter:
 
         try:
             while not self.should_stop():
+                if self.is_buff:
+                    self.apply_buffs1()
+
                 for action in self.action_sequence:
                     func_name = action["function"]
                     args = action.get("args", [])
