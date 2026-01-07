@@ -8,8 +8,13 @@ logger = logging.getLogger(__name__)
             "function": "loop_att",
             "args": [['a','d'],0,30]
 
+            #
             "function": "loop_att1",
             "args": [['a'],2,0]
+
+            #标飞左右巡回刷怪专用
+            "function": "loop_att2",
+            "args": [['a'],['d'],2,0]
 
             "function": "dir_att",
             "args": ['right',['a'],18,0.1]
@@ -22,7 +27,7 @@ logger = logging.getLogger(__name__)
             "args": [['a'],3]
 
             牧师刷pw
-            "function": "loop_att2",
+            "function": "loop_mushi_pw",
             "args": [1,1.2]
 
 
@@ -75,6 +80,25 @@ CONFIGS = {
             {"key": "7", "interval": -1}
         ]
     },
+    "3": {#飞侠
+        "runTime":-1,
+        "is_buff":True,
+        "action_sequence": [
+        {
+            "function": "loop_att",
+            "args": [['a'],3,3]
+        }],
+        "SHORTCUTS": [
+            {"key": "q", "interval": -1},
+            {"key": "w", "interval": 555},
+            {"key": "e", "interval": -1},
+            {"key": "r", "interval": -1},
+            {"key": "t", "interval": -1},
+            {"key": "y", "interval": 900}, 
+            {"key": "5", "interval": 550},
+            {"key": "7", "interval": -1}
+        ]
+    }
 }
 # ============================== 快捷键配置 ==============================
 # 按游戏内实际设置修改（主键盘/小键盘均可）火毒

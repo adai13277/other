@@ -87,21 +87,12 @@ class AutoFighter:
 
 
     # ------------------------------ 基础键盘操作 ------------------------------
-    def _press_key(self, key: str, delay: float = 0):
-        """按下并释放单个键，可选延迟"""
-        pyautogui.press(key)
-        time.sleep(delay)
-    def _press_key_continue(self, key: str,t: delay: float = 0.1):
-        
-
-        pyautogui.press(key)
-        time.sleep(delay)
-
-    def _hold_keys(self, keys, duration):
+    def _hold_keys(self, keys:str, t:float):
+        """按住keys，持续t后释放"""
         try:
             for key in keys:
                 pyautogui.keyDown(key)
-            time.sleep(duration)
+            time.sleep(t)
         finally:
             for key in keys:
                 try:
@@ -109,8 +100,12 @@ class AutoFighter:
                 except:
                     pass  # Ignore errors during key release
 
+    def _press_key(self, key: str, delay: float = 0):
+        """按下并释放单个键，可选延迟"""
+        pyautogui.press(key)
+        time.sleep(delay)
 
-    def _tap_keys(self, keys: str, t: float , interval: float = 0.1):
+    def _press_keys_continue(self, keys: str, t: float , interval: float = 0.1):
         """不断交替按下keys中的每一个按键，持续t秒，交替间隔默认为0.1"""
         tt = 0
         current_time = time.time()
@@ -129,16 +124,6 @@ class AutoFighter:
     def _keys_up(self,keys:str):
         for key in keys:
             pyautogui.keyUp(key)
-
-    def _hold_press(self, hkeys: str,pkeys:str,duration:float = 3):
-        for key in hkeys:
-            pyautogui.keyDown(key)
-
-        self._tap_keys(pkeys,duration)
-        # 同时释放所有键
-        for key in hkeys:
-            pyautogui.keyUp(key)
-
 
     # ------------------------------ Buff管理 ------------------------------
     #无间隔buff
@@ -208,6 +193,7 @@ class AutoFighter:
         self._hold_keys(['down','space'],0.18)
 
     def recAttack(self,keys:str,t:float):
+        '''矩形区域刷怪，用于方便瞬移上下的多层怪情况'''
         arr1 = ['right']
         # arr1.extend(keys)
         arr2 = ['left']
@@ -233,7 +219,8 @@ class AutoFighter:
     def playDrug1(self,t1:float,t2:float):
         self.playDrug('left',t1)
         self.playDrug('right',t2)
-    #先放爆炸再放毒,用来刷红船专用
+
+    #火毒刷红船专属定制辅助，先放爆炸再放毒,用来刷红船专用
     def playDrug(self,direction:str,t:float):
         self._keys_down([direction,'d'])
         count = 3
@@ -242,7 +229,7 @@ class AutoFighter:
             if time.time() - startT > t:
                 continue
             ran = random.random()
-            self._tap_keys(['a','2'],t/count)
+            self._press_keys_continue(['a','2'],t/count)
             if ran < 1 :   
             #     #概率上瞬移
                 passT = time.time() - startT
@@ -266,7 +253,7 @@ class AutoFighter:
 
         #1.to left
         self._hold_keys(['left','d'],3)
-
+        pass
         #2、to up
         # self.
 
@@ -274,39 +261,31 @@ class AutoFighter:
 
         #4、to dowm
 
-        startT = time.time()
-        for i in range(count):
-            if time.time() - startT > t:
-                continue
-            ran = random.random()
-            self._tap_keys(['a','2'],t/count)
-            if ran < 1 :   
-            #     #概率上瞬移
-                passT = time.time() - startT
-                if direction == 'left' and  (passT < 0.5 or (passT >3)):
-                    continue 
-                if direction == 'right' and  (passT < 1.2 or passT >3 or (passT >2 and passT <3)):
-                    continue  
-                self._keys_up(['d'])
-                self._wait(0.35)
-
-                self._hold_keys(['space'],0.25)
-                self._hold_keys(['up','d'],0.05)
-
-                self._keys_down(['d'])
-        self._keys_up([direction,'d'])
-
     #左右各打几秒，循环6次，最后跳跃一下
     def loop_att(self,keys:str,lt:float,rt:float):
         self._keys_down(keys)
 
-        for i in range(6):
-            self.attack(['left'],lt)
-            self.attack(['right'],rt)
+        for i in range(5):
+            self._hold_keys(['left'],0.3)
+            self._wait(lt)
+            self._hold_keys(['right'],0.3)
+            self._wait(rt)
 
         self._keys_up(keys)
         
         self.attack(['down'],0.5)
+
+    #左右循环攻击，持续按住keys,巡回t秒，中间交替按keys1,间隔interval =0.1
+    def loop_att2(self,keys:str,t:float,keys1:str,interval:float = 0.1):
+        for direction in ['left','right']:
+            other_direction = self.get_other_direction(direction)
+
+            self._keys_down(keys)
+
+            self._press_keys_continue(keys1,t,interval)
+
+            self._keys_up(keys)
+        
 
 
     #a向闪现dt，b向攻击at
@@ -320,22 +299,22 @@ class AutoFighter:
         self._keys_up(keys)
 
 
-    # ran_move_attak ->stand_t, +X->2move_t，-X ->move_t ，牧师刷pw专用
-    def loop_att2(self,stand_t:float,move_t:float):
+    # stand_t, 2move_t，-move_t ，牧师刷pw专用
+    def loop_mushi_pw(self,stand_t:float,move_t:float):
 
         for direction in ['left','right']:
             other_direction = self.get_other_direction(direction)
 
-            self.ran_move_attak(['a'],stand_t)
+            self.ran_move_attack(['a'],stand_t)
 
             self.attack([direction,'a','d'],move_t * 1)
-            self.ran_move_attak(['a'],move_t * 0.2)
+            self.ran_move_attack(['a'],move_t * 0.2)
             self.attack([direction,'a','d'],move_t * 1)
-            # self.ran_move_attak(['a'],move_t * 0.2)
+            # self.ran_move_attack(['a'],move_t * 0.2)
             self.attack([other_direction,'a','d'],move_t * 0.8)
 
     #在一个总的tt内，按住keys键，在短时间内快速左右移动,移动范围缩放Scale
-    def ran_move_attak(self,keys:str,tt:float,scale:float = 0.8):
+    def ran_move_attack(self,keys:str,tt:float,scale:float = 0.8):
         self._keys_down(keys)
         current_time = time.time()
         while time.time() - current_time < tt:
@@ -359,6 +338,7 @@ class AutoFighter:
         else:
             return 'right'
 
+    #在绳子上挂机，避免被踢出游戏，t秒内 爬上/爬下 绳子一下
     def guaji(self,t:float):
         self._press_key(['up'],t)
         self._press_key(['down'],t)
