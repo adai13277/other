@@ -86,7 +86,7 @@ CONFIGS = {
         "action_sequence": [
         {
             "function": "loop_att",
-            "args": [['a'],3,3]
+            "args": [['a'],1,4]
         }],
         "SHORTCUTS": [
             {"key": "q", "interval": -1},
@@ -95,76 +95,28 @@ CONFIGS = {
             {"key": "r", "interval": -1},
             {"key": "t", "interval": -1},
             {"key": "y", "interval": 900}, 
-            {"key": "5", "interval": 550},
-            {"key": "7", "interval": -1}
+            {"key": "5", "interval": 300},
+            {"key": "6", "interval": 550}
+        ]
+    },
+    "4": {#弓箭手拆贝贝
+        "runTime":-1,
+        "is_buff":True,
+        "action_sequence": [
+        {
+            "function": "loop_att3",
+            "args": [['a'],2]
+        }],
+        "SHORTCUTS": [
+            {"key": "q", "interval": -1},
+            {"key": "w", "interval": 888},
+            {"key": "e", "interval": 888},
+            {"key": "r", "interval": -1},
+            {"key": "t", "interval": -1},
+            {"key": "y", "interval": 900}, 
+            {"key": "5", "interval": 900},
+            {"key": "6", "interval": 550}
         ]
     }
 }
-# ============================== 快捷键配置 ==============================
-# 按游戏内实际设置修改（主键盘/小键盘均可）火毒
-# SHORTCUTS = [
-#                 {"key": "q", "interval": 888},
-#                 {"key": "w", "interval": 888},
-#                 {"key": "e", "interval": 777},
-#                 {"key": "r", "interval": 555},
-#                 {"key": "t", "interval": 900},
-#                 {"key": "y", "interval": 900}, 
-#                 {"key": "2", "interval": 5},
-#                 {"key": "1", "interval": 2}
-            # ]
-
-#飞侠
-# SHORTCUTS = [
-#                 {"key": "q", "interval": 888},
-#                 {"key": "w", "interval": 888},
-#                 {"key": "e", "interval": 666},
-#                 {"key": "r", "interval": -1},
-#                 {"key": "t", "interval": 900},
-#                 {"key": "y", "interval": 900},
-#                 {"key": "5", "interval": 300},
-#                 {"key": "6", "interval": 550},
-#                 {"key": "7", "interval": 550},
-#                 {"key": "1", "interval": 3},
-#                 {"key": "2", "interval": 8}
-
-#             ]
-
-# 按游戏内实际设置修改（主键盘/小键盘均可）牧师 拆车
-# SHORTCUTS = [
-#                 {"key": "q", "interval": -1},
-#                 {"key": "w", "interval": -1},
-#                 {"key": "e", "interval": 777},
-#                 {"key": "r", "interval": 111},
-#                 {"key": "t", "interval": -1},
-#                 {"key": "y", "interval": -1},
-#                 {"key": "5", "interval": -1},
-#                 {"key": "6", "interval": -1},
-#                 {"key": "7", "interval": -1}
-#             ]
-# 按游戏内实际设置修改（主键盘/小键盘均可）牧师 刷pw
-# SHORTCUTS = [
-#                 {"key": "q", "interval": 888},
-#                 {"key": "w", "interval": 888},
-#                 {"key": "e", "interval": 777},
-#                 {"key": "r", "interval": 888},
-#                 {"key": "t", "interval": 888},
-#                 {"key": "y", "interval": 900},
-#                 {"key": "5", "interval": 550},
-#                 {"key": "6", "interval": 550},
-#                 {"key": "7", "interval": -1}
-#             ]
-
-# # 按游戏内实际设置修改（主键盘/小键盘均可）new role
-# SHORTCUTS = [
-#                 {"key": "q", "interval": -1},
-#                 {"key": "w", "interval": 111},
-#                 {"key": "e", "interval": -1},
-#                 {"key": "r", "interval": -1},
-#                 {"key": "t", "interval": -1},
-#                 {"key": "y", "interval": -1},
-#                 {"key": "1", "interval": -1},
-#                 {"key": "2", "interval": -1},
-#                 {"key": "7", "interval": -1}
-#             ]
-
 logger.debug("配置加载完成")

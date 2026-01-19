@@ -266,14 +266,14 @@ class AutoFighter:
         self._keys_down(keys)
 
         for i in range(5):
-            self._hold_keys(['left'],0.3)
-            self._wait(lt)
-            self._hold_keys(['right'],0.3)
-            self._wait(rt)
+            self._hold_keys(['left'],lt)
+            # self._wait(lt)
+            self._hold_keys(['right'],rt)
+            # self._wait(rt)
 
         self._keys_up(keys)
         
-        self.attack(['down'],0.5)
+        self.attack(['space'],0.5)
 
     #左右循环攻击，持续按住keys,巡回t秒，中间交替按keys1,间隔interval =0.1
     def loop_att2(self,keys:str,t:float,keys1:str,interval:float = 0.1):
@@ -285,6 +285,20 @@ class AutoFighter:
             self._press_keys_continue(keys1,t,interval)
 
             self._keys_up(keys)
+
+    #左右循环攻击，弓手刷黑贝贝专用
+    def loop_att3(self,keys:str,t:float):
+        for direction in ['left','right']:
+            for i in range(2):
+                other_direction = self.get_other_direction(direction)
+
+                self._keys_down([direction])
+                # self._wait(0.4)
+                # self._press_key(['space'],0.2)
+                self._hold_keys(keys,t)
+                # self._press_keys_continue(keys1,t,interval)
+
+                self._keys_up([direction])
         
 
 
