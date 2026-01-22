@@ -4,3 +4,6 @@
 /note/src/auto_fighter.log
 /note/src/config.py
 *.pyc
+dist
+build
+/note/src/__pycache__

@@ -1,0 +1,90 @@
+{
+  "use_config": "1",
+  "configs": {
+    "1": {
+      "_desc": "牧师拆车",
+      "runTime": -1,
+      "is_buff": true,
+      "action_sequence": [
+        {
+          "function": "loop_att1",
+          "args": [["a"], 2, 0]
+        }
+      ],
+      "SHORTCUTS": [
+        {"key": "q", "interval": -1},
+        {"key": "w", "interval": -1},
+        {"key": "e", "interval": 777},
+        {"key": "r", "interval": 888},
+        {"key": "t", "interval": -1},
+        {"key": "y", "interval": 900},
+        {"key": "5", "interval": -1},
+        {"key": "6", "interval": -1},
+        {"key": "7", "interval": -1}
+      ]
+    },
+    "2": {
+      "_desc": "火毒拆车",
+      "runTime": -1,
+      "is_buff": true,
+      "action_sequence": [
+        {
+          "function": "loop_att1",
+          "args": [["a"], 2, 0]
+        }
+      ],
+      "SHORTCUTS": [
+        {"key": "q", "interval": 888},
+        {"key": "w", "interval": 888},
+        {"key": "e", "interval": 777},
+        {"key": "r", "interval": 888},
+        {"key": "t", "interval": -1},
+        {"key": "y", "interval": 900},
+        {"key": "6", "interval": -1},
+        {"key": "7", "interval": -1}
+      ]
+    },
+    "3": {
+      "_desc": "飞侠",
+      "runTime": -1,
+      "is_buff": true,
+      "action_sequence": [
+        {
+          "function": "loop_att",
+          "args": [["a"], 1, 4]
+        }
+      ],
+      "SHORTCUTS": [
+        {"key": "q", "interval": -1},
+        {"key": "w", "interval": 555},
+        {"key": "e", "interval": -1},
+        {"key": "r", "interval": -1},
+        {"key": "t", "interval": -1},
+        {"key": "y", "interval": 900},
+        {"key": "5", "interval": 300},
+        {"key": "6", "interval": 550}
+      ]
+    },
+    "4": {
+      "_desc": "弓箭手拆贝贝",
+      "runTime": -1,
+      "is_buff": true,
+      "action_sequence": [
+        {
+          "function": "loop_att3",
+          "args": [["a"], 2]
+        }
+      ],
+      "SHORTCUTS": [
+        {"key": "q", "interval": -1},
+        {"key": "w", "interval": 888},
+        {"key": "e", "interval": 888},
+        {"key": "r", "interval": -1},
+        {"key": "t", "interval": -1},
+        {"key": "y", "interval": 900},
+        {"key": "5", "interval": 900},
+        {"key": "6", "interval": 550}
+      ]
+    }
+  }
+}
