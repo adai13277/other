@@ -14,6 +14,10 @@ class AutoFighter:
         self.stop_event = threading.Event()
         self.running = True
         
+        # 记录程序启动时间（用于 Buff 延迟启动）
+        self.start_time = time.time()
+        self.buff_start_delay = 10  # Buff 启动延迟（秒），可通过 config 覆盖
+        
         # 1. 实例化动作驱动器 (Hand)
         self.driver = ActionDriver(self.stop_event)
         
@@ -49,6 +53,8 @@ class AutoFighter:
             self.action_sequence = config["action_sequence"]
             self.is_buff = config["is_buff"]
             self.runTime = config["runTime"]
+            # 从 config 中读取 buff 启动延迟（如果有），否则使用默认值
+            self.buff_start_delay = config.get("buff_start_delay", self.buff_start_delay)
             
             logger.info(f"已加载配置 [{use_config}]: {config.get('_desc', '无描述')}")
         except Exception as e:
@@ -81,20 +87,25 @@ class AutoFighter:
             # --- 规则2: 小于 100 的统统进线程 ---
             if raw_interval < 100:
                 self.threaded_shortcuts.append({"key": buff_key, "interval": raw_interval})
-                self.last_release_times[buff_key] = current_time - raw_interval
+                # 初始化为当前时间，结合启动延迟机制确保 buff 延迟释放
+                self.last_release_times[buff_key] = current_time
                 continue
 
             # --- 规则3: 大于等于 100 的逻辑 ---
             final_interval = raw_interval
-            if raw_interval <= 999: 
+            
+            # 隐藏规则：百位十位相同的 buff (如 888、777 等)，在延迟启动后立即释放第一次，
+            # 然后才根据间隔继续释放；其他 buff 则延迟启动后才开始计时
+            is_special_format = False
+            if raw_interval <= 999:
                 str_num = str(raw_interval)
                 if len(str_num) == 3 and str_num[1] == str_num[0]:
-                    hundreds = int(str_num[0]) * 100
-                    tens = int(str_num[1]) * 10
-                    offset = 0 if str_num[2] != '0' else -5
-                    final_interval = hundreds + tens + offset
+                    is_special_format = True
             
-            self.last_release_times[buff_key] = current_time - final_interval
+            if is_special_format:
+                self.last_release_times[buff_key] = current_time - final_interval
+            else:
+                self.last_release_times[buff_key] = current_time
 
             if raw_interval % 10 == 0:
                 self.threaded_shortcuts.append({"key": buff_key, "interval": final_interval})
@@ -151,6 +162,11 @@ class AutoFighter:
         try:
             while not self.should_stop():
                 current_time = time.time()
+                # 检查是否达到 Buff 启动延迟时间
+                if current_time - self.start_time < self.buff_start_delay:
+                    time.sleep(0.1)
+                    continue
+                
                 for conf in self.threaded_shortcuts:
                     buff_key = conf["key"]
                     interval = conf["interval"]
@@ -184,6 +200,10 @@ class AutoFighter:
             return
 
         current_time = time.time()
+        # 检查是否达到 Buff 启动延迟时间
+        if current_time - self.start_time < self.buff_start_delay:
+            return
+        
         for conf in self.sync_shortcuts:
             buff_key = conf["key"]
             interval = conf["interval"]

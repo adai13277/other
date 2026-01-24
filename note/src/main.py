@@ -3,15 +3,27 @@ import threading
 import sys
 import time
 import os
-
+import json
 
 import datetime  # 新增
 import ctypes    # 新增 (用于弹窗提示)
 from auto_fighter import AutoFighter
+from tools.license_validator import LicenseValidator
 
 # ================= 授权配置区 =================
 # 格式: "YYYY-MM-DD", 例如 "2026-02-20"
-EXPIRATION_DATE = "2026-02-20" 
+EXPIRATION_DATE = "2026-02-20"
+
+# 公钥（硬编码）
+PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp+qN2nLs9rqI3C623SLf
+PTGUEhvzwDu3z1an4wAvpHPbAt+06oQwTxJZ5IXOx4Id29jQxexd7hMdLYFUw8s1
+1dxgei8n/SlVSxfj6sNqj1p37YfUkVFpy88fOPTFmZ1GYkbhsh67ybAwVqaJJUS9
+DTS5Fd2ET88zk8gHZ9fo4nNPvkPX+gTotGK93yyck2BO2JB5OxXq9ZYc6ROUqZC3
+pmLQ4Hyb+B5DXTo/yDBLoPX/nBGc0UvJIRBs/Q0NlMKIF/5lw+8vtZNE568xg2Vi
+P76rQvsDyu+9xc69ovkNEdku2zONlr+/jw77CHFD3R/LMJvzh+zyLSULA+wx6ScL
++QIDAQAB
+-----END PUBLIC KEY-----"""
 # ============================================
 
 def check_expiration():
@@ -40,6 +52,63 @@ def check_expiration():
         # 防止日期格式写错导致程序崩溃，默认放行但报错
         logging.error(f"过期检查逻辑出错: {e}")
 
+def check_license():
+    """检查 License 密钥"""
+    try:
+        # 确定配置路径
+        if getattr(sys, 'frozen', False):
+            base_path = os.path.dirname(sys.executable)
+            config_path = os.path.join(base_path, 'config.json')
+        else:
+            config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+        
+        # 读取配置
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        
+        license_key = config.get('license', {}).get('key', '')
+        
+        # 如果没有设置 License，提示警告
+        if not license_key or license_key.strip() == '':
+            msg = "⚠️ License 未设置\n\n请使用 License 生成器生成密钥，并通过配置编辑器将其添加到 config.json。\n\n是否继续运行？"
+            try:
+                result = ctypes.windll.user32.MessageBoxW(
+                    0, msg, "License 警告", 0x04 | 0x30  # Yes/No + Warning icon
+                )
+                if result != 6:  # 6 = Yes
+                    logging.warning("用户取消了无 License 运行")
+                    sys.exit(0)
+            except:
+                print(msg)
+                response = input("继续运行? (y/n): ").strip().lower()
+                if response != 'y':
+                    sys.exit(0)
+        else:
+            # 验证 License（使用硬编码的公钥）
+            validator = LicenseValidator(PUBLIC_KEY, is_path=False)
+            
+            result = validator.verify(license_key)
+            
+            if result.get('valid'):
+                logging.info(f"✅ License 验证成功: {result.get('message', '')}")
+            else:
+                error_msg = result.get('message', '未知错误')
+                msg = f"❌ License 验证失败\n\n{error_msg}\n\n请获取有效的 License。"
+                try:
+                    ctypes.windll.user32.MessageBoxW(0, msg, "License 错误", 0x10)
+                except:
+                    print(f"\n{'='*50}\n{msg}\n{'='*50}\n")
+                logging.critical(f"License 验证失败: {error_msg}")
+                sys.exit(1)
+                
+    except FileNotFoundError:
+        logging.warning("config.json 不存在，跳过 License 检查")
+    except json.JSONDecodeError:
+        logging.warning("config.json 格式错误，跳过 License 检查")
+    except Exception as e:
+        logging.error(f"License 检查异常: {e}", exc_info=True)
+
+
 def setup_logging():
     # 确定日志路径（兼容 exe）
     if getattr(sys, 'frozen', False):
@@ -63,12 +132,15 @@ def main():
     
     # 1. 【新增】在程序启动最开始进行检查
     check_expiration()
+    
+    # 2. 【新增】检查 License
+    check_license()
 
     try:
-        # 1. 初始化 (内部会自动读取 config.json)
+        # 3. 初始化 (内部会自动读取 config.json)
         fighter = AutoFighter()
         
-        # 2. 计算结束时间
+        # 4. 计算结束时间
         stop_minutes = fighter.getRunTime()
         stop_timestamp = time.time() + stop_minutes * 60 if stop_minutes > 0 else 0
         
@@ -80,18 +152,18 @@ def main():
 
         threads = []
 
-        # 3. 启动无间隔 Buff 线程 (独立线程，随时响应)
+        # 5. 启动无间隔 Buff 线程 (独立线程，随时响应)
         # 即使 is_buff 为 False，该方法内部也会自行判断直接返回，所以这里直接启动即可
         t_buff = threading.Thread(target=fighter.run_threaded_buffs, daemon=True, name="BuffThread")
         threads.append(t_buff)
         t_buff.start()
         
-        # 4. 启动主战斗线程 (包含有间隔 Buff 的检测)
+        # 6. 启动主战斗线程 (包含有间隔 Buff 的检测)
         t_run = threading.Thread(target=fighter.run, daemon=True, name="MainLoop")
         threads.append(t_run)
         t_run.start()
 
-        # 5. 主线程监控逻辑
+        # 7. 主线程监控逻辑
         try:
             while True:
                 # 检查主逻辑线程是否存活

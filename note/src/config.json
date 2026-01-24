@@ -1,4 +1,8 @@
 {
+  "license": {
+    "key": "eyJwYXlsb2FkIjogImV5SmxlSEJwY21GMGFXOXVJam9nSWpJd01qWXRNREV0TXpBaUxDQWlabWx1WjJWeWNISnBiblFpT2lBaVFVNVpJaXdnSW01dmJtTmxJam9nSWpFM05qa3hOVE16TnprdU5qVTFPRE01SWl3Z0luSmxjWFZwY21WZlpHVjJhV05sWDJKcGJtUnBibWNpT2lCbVlXeHpaWDA9IiwgInNpZ25hdHVyZSI6ICJuTHFWZERVMkNwcXYvZDhGVE04Q0gwT2RlUDExVHBaQWZ6WGpieXU5UW9rSUdPUnJZSm1uTkdKRFFyK201a0hUTHEwckZZM054WHo0R202bC8yeXJGbjBEVnM4VG5tb3BmQUJEVk5MYllwZ3dDZzdzVE1yK0M0a1A5R09wZXdkVHlHVDRNVzErYUVBNHo0UTAzb0ltajI2a25MUFQxSDNkZThtanBhUDlucnI1bUsyM3NzZ1JYZmg4ZTNUWURvcG1UTGFwTWNCM1l5Z3A0Z2tSTUtDQ2xNK2d5VTZCSFgzdUNZejhxVEJQUm1kS3NtaHFyVUNzSTNzdGR6NXhaRFlHNTRRcXREM0tEODVUU2tjNVdWQVczbkZlcWlVcmk5eW05UjlxcTBZZ2ZReG81b0w2czFGMEFqbHBSZEROeTBTWHlxclB2aXBQbzN4dHk4Q2wvclZDQ3c9PSJ9",
+    "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp+qN2nLs9rqI3C623SLf\nPTGUEhvzwDu3z1an4wAvpHPbAt+06oQwTxJZ5IXOx4Id29jQxexd7hMdLYFUw8s1\n1dxgei8n/SlVSxfj6sNqj1p37YfUkVFpy88fOPTFmZ1GYkbhsh67ybAwVqaJJUS9\nDTS5Fd2ET88zk8gHZ9fo4nNPvkPX+gTotGK93yyck2BO2JB5OxXq9ZYc6ROUqZC3\npmLQ4Hyb+B5DXTo/yDBLoPX/nBGc0UvJIRBs/Q0NlMKIF/5lw+8vtZNE568xg2Vi\nP76rQvsDyu+9xc69ovkNEdku2zONlr+/jw77CHFD3R/LMJvzh+zyLSULA+wx6ScL\n+QIDAQAB\n-----END PUBLIC KEY-----"
+  },
   "use_config": "1",
   "configs": {
     "1": {
@@ -7,20 +11,30 @@
       "is_buff": true,
       "action_sequence": [
         {
-          "function": "loop_att1",
-          "args": [["a"], 2, 0]
+          "function": "loop_mushi_pw",
+          "args": [
+            1,
+            1.2
+          ]
         }
       ],
       "SHORTCUTS": [
-        {"key": "q", "interval": -1},
-        {"key": "w", "interval": -1},
-        {"key": "e", "interval": 777},
-        {"key": "r", "interval": 888},
-        {"key": "t", "interval": -1},
-        {"key": "y", "interval": 900},
-        {"key": "5", "interval": -1},
-        {"key": "6", "interval": -1},
-        {"key": "7", "interval": -1}
+        {
+          "key": "q",
+          "interval": 111.0
+        },
+        {
+          "key": "w",
+          "interval": 333.0
+        },
+        {
+          "key": "e",
+          "interval": 222.0
+        },
+        {
+          "key": "r",
+          "interval": 333.0
+        }
       ]
     },
     "2": {
@@ -30,18 +44,52 @@
       "action_sequence": [
         {
           "function": "loop_att1",
-          "args": [["a"], 2, 0]
+          "args": [
+            [
+              "a"
+            ],
+            2,
+            0
+          ]
         }
       ],
       "SHORTCUTS": [
-        {"key": "q", "interval": 888},
-        {"key": "w", "interval": 888},
-        {"key": "e", "interval": 777},
-        {"key": "r", "interval": 888},
-        {"key": "t", "interval": -1},
-        {"key": "y", "interval": 900},
-        {"key": "6", "interval": -1},
-        {"key": "7", "interval": -1}
+        {
+          "key": "q",
+          "interval": 888.0
+        },
+        {
+          "key": "w",
+          "interval": 885.0
+        },
+        {
+          "key": "e",
+          "interval": 777.0
+        },
+        {
+          "key": "r",
+          "interval": 888.0
+        },
+        {
+          "key": "t",
+          "interval": -1
+        },
+        {
+          "key": "y",
+          "interval": 900.0
+        },
+        {
+          "key": "5",
+          "interval": -1
+        },
+        {
+          "key": "6",
+          "interval": -1
+        },
+        {
+          "key": "7",
+          "interval": -1
+        }
       ]
     },
     "3": {
@@ -51,18 +99,48 @@
       "action_sequence": [
         {
           "function": "loop_att",
-          "args": [["a"], 1, 4]
+          "args": [
+            [
+              "a"
+            ],
+            1,
+            4
+          ]
         }
       ],
       "SHORTCUTS": [
-        {"key": "q", "interval": -1},
-        {"key": "w", "interval": 555},
-        {"key": "e", "interval": -1},
-        {"key": "r", "interval": -1},
-        {"key": "t", "interval": -1},
-        {"key": "y", "interval": 900},
-        {"key": "5", "interval": 300},
-        {"key": "6", "interval": 550}
+        {
+          "key": "q",
+          "interval": -1
+        },
+        {
+          "key": "w",
+          "interval": 555
+        },
+        {
+          "key": "e",
+          "interval": -1
+        },
+        {
+          "key": "r",
+          "interval": -1
+        },
+        {
+          "key": "t",
+          "interval": -1
+        },
+        {
+          "key": "y",
+          "interval": 900
+        },
+        {
+          "key": "5",
+          "interval": 300
+        },
+        {
+          "key": "6",
+          "interval": 550
+        }
       ]
     },
     "4": {
@@ -72,18 +150,47 @@
       "action_sequence": [
         {
           "function": "loop_att3",
-          "args": [["a"], 2]
+          "args": [
+            [
+              "a"
+            ],
+            2
+          ]
         }
       ],
       "SHORTCUTS": [
-        {"key": "q", "interval": -1},
-        {"key": "w", "interval": 888},
-        {"key": "e", "interval": 888},
-        {"key": "r", "interval": -1},
-        {"key": "t", "interval": -1},
-        {"key": "y", "interval": 900},
-        {"key": "5", "interval": 900},
-        {"key": "6", "interval": 550}
+        {
+          "key": "q",
+          "interval": -1
+        },
+        {
+          "key": "w",
+          "interval": 888
+        },
+        {
+          "key": "e",
+          "interval": 888
+        },
+        {
+          "key": "r",
+          "interval": -1
+        },
+        {
+          "key": "t",
+          "interval": -1
+        },
+        {
+          "key": "y",
+          "interval": 900
+        },
+        {
+          "key": "5",
+          "interval": 900
+        },
+        {
+          "key": "6",
+          "interval": 550
+        }
       ]
     }
   }

@@ -55,7 +55,8 @@ Two parallel paths:
   - ction_sequence: Array of {unction, rgs} to execute in loop
   - SHORTCUTS: Array of {key, interval} for buff/ability timings
   - is_buff: Boolean enabling/disabling buff system
-  - unTime: Total seconds (-1 for infinite)
+  - 
+unTime: Total seconds (-1 for infinite)
 
 ### Buff Classification Logic ([src/auto_fighter.py](../src/auto_fighter.py#L63-L100))
 
