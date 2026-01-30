@@ -40,7 +40,7 @@
       "desc": "按住指定按键持续攻击",
       "params": ["keys", "t"],
       "default_args": [["a"], 3],
-      "param_explanation": "keys: 需要持续按住的按键列表\nt: 攻击持续时间（秒）"
+      "param_explanation": "keys: 需要持续按住的按键列表\nt: 攻击持续时间（秒）,可随意设置，因为会被循环调用"
     },
     "guaji": {
       "desc": "挂机防掉线",
