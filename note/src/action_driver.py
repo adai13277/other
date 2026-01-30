@@ -153,13 +153,17 @@ class ActionDriver:
             self.attack([other], at)
         self.keys_up(keys)
 
+    def _press_key(self, key, interval):
+        """按下并释放一个键，然后等待interval秒"""
+        pyautogui.press(key)
+        self.wait(interval)
+
     def _press_keys_continue(self, keys: str, t: float , interval: float = 0.1):
         """不断交替按下keys中的每一个按键，持续t秒，交替间隔默认为0.1"""
-        tt = 0
         current_time = time.time()
         while time.time() - current_time < t:
             for key in keys:
-                self._press_key(key,interval)
+                self._press_key(key, interval)
                 
     #左右循环攻击，持续按住keys,巡回t秒，中间交替按keys1,间隔interval =0.1
     def loop_att2(self,keys:str,t:float,keys1:str,interval:float = 0.1):

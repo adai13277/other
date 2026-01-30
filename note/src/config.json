@@ -1,6 +1,6 @@
 {
   "license": {
-    "key": "eyJwYXlsb2FkIjogImV5SmxlSEJwY21GMGFXOXVJam9nSWpJd01qWXRNREV0TXpBaUxDQWlabWx1WjJWeWNISnBiblFpT2lBaVFVNVpJaXdnSW01dmJtTmxJam9nSWpFM05qa3hOVE16TnprdU5qVTFPRE01SWl3Z0luSmxjWFZwY21WZlpHVjJhV05sWDJKcGJtUnBibWNpT2lCbVlXeHpaWDA9IiwgInNpZ25hdHVyZSI6ICJuTHFWZERVMkNwcXYvZDhGVE04Q0gwT2RlUDExVHBaQWZ6WGpieXU5UW9rSUdPUnJZSm1uTkdKRFFyK201a0hUTHEwckZZM054WHo0R202bC8yeXJGbjBEVnM4VG5tb3BmQUJEVk5MYllwZ3dDZzdzVE1yK0M0a1A5R09wZXdkVHlHVDRNVzErYUVBNHo0UTAzb0ltajI2a25MUFQxSDNkZThtanBhUDlucnI1bUsyM3NzZ1JYZmg4ZTNUWURvcG1UTGFwTWNCM1l5Z3A0Z2tSTUtDQ2xNK2d5VTZCSFgzdUNZejhxVEJQUm1kS3NtaHFyVUNzSTNzdGR6NXhaRFlHNTRRcXREM0tEODVUU2tjNVdWQVczbkZlcWlVcmk5eW05UjlxcTBZZ2ZReG81b0w2czFGMEFqbHBSZEROeTBTWHlxclB2aXBQbzN4dHk4Q2wvclZDQ3c9PSJ9",
+    "key": "eyJwYXlsb2FkIjogImV5SmxlSEJwY21GMGFXOXVJam9nSWpJd01qWXRNREV0TWpjZ01ESTZNRGdpTENBaVptbHVaMlZ5Y0hKcGJuUWlPaUFpUVU1WlgwUkZWa2xEUlNJc0lDSnViMjVqWlNJNklDSXhOelk1TWpJd05URTRMak14TlRZMk15SXNJQ0p5WlhGMWFYSmxYMlJsZG1salpWOWlhVzVrYVc1bklqb2dabUZzYzJWOSIsICJzaWduYXR1cmUiOiAiSXUvV05OSEV6Z25wVzZZTTc3SjRvNzJreWJxL2NxY2hlZERWb1pPVFJXczRSSDhRbkIzWWVwUlMxR3hqaFNjT2UxazRzYXlEQytxZ0htbmJHQkRGd1J0Nmp2M2VDc0N0S21QUFc4bnhLbkJPVzVKalVacXVTNERqcmE3R084WnNqVkluV1RoeHg3UDdJQ25ocnlzYmdhYzJaMmowdVEyalp4VnhKcmcrMUxUTm43eW1FRlpSVEdzMEVKNjk4NkFveTQrczAwbTVRWGIxNUhodFVuVWk4T2FJek0ydFMzRXZzQUJZeXZJZU5FU3ZxRzB4RWhVMTIyUy9kYnBSVU1iM2ltaUFxWXZ6ajhZcVVJS3lVeXNSQVJYNGJ0V0xWQVN1TU5tbVpXMnZjVitqQ0ZpWUsyRER2a1ZqdU45N3IrMzFkMXEyNkpqdDZrOEhQcEdQM2hMdWhBPT0ifQ==",
     "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp+qN2nLs9rqI3C623SLf\nPTGUEhvzwDu3z1an4wAvpHPbAt+06oQwTxJZ5IXOx4Id29jQxexd7hMdLYFUw8s1\n1dxgei8n/SlVSxfj6sNqj1p37YfUkVFpy88fOPTFmZ1GYkbhsh67ybAwVqaJJUS9\nDTS5Fd2ET88zk8gHZ9fo4nNPvkPX+gTotGK93yyck2BO2JB5OxXq9ZYc6ROUqZC3\npmLQ4Hyb+B5DXTo/yDBLoPX/nBGc0UvJIRBs/Q0NlMKIF/5lw+8vtZNE568xg2Vi\nP76rQvsDyu+9xc69ovkNEdku2zONlr+/jw77CHFD3R/LMJvzh+zyLSULA+wx6ScL\n+QIDAQAB\n-----END PUBLIC KEY-----"
   },
   "use_config": "1",
@@ -11,17 +11,20 @@
       "is_buff": true,
       "action_sequence": [
         {
-          "function": "loop_mushi_pw",
+          "function": "loop_att",
           "args": [
-            1,
-            1.2
+            [
+              "a"
+            ],
+            10,
+            11
           ]
         }
       ],
       "SHORTCUTS": [
         {
           "key": "q",
-          "interval": 111.0
+          "interval": 900.0
         },
         {
           "key": "w",

@@ -16,7 +16,7 @@ class AutoFighter:
         
         # 记录程序启动时间（用于 Buff 延迟启动）
         self.start_time = time.time()
-        self.buff_start_delay = 10  # Buff 启动延迟（秒），可通过 config 覆盖
+        self.buff_start_delay = 5  # Buff 启动延迟（秒），可通过 config 覆盖
         
         # 1. 实例化动作驱动器 (Hand)
         self.driver = ActionDriver(self.stop_event)
@@ -54,7 +54,7 @@ class AutoFighter:
             self.is_buff = config["is_buff"]
             self.runTime = config["runTime"]
             # 从 config 中读取 buff 启动延迟（如果有），否则使用默认值
-            self.buff_start_delay = config.get("buff_start_delay", self.buff_start_delay)
+            
             
             logger.info(f"已加载配置 [{use_config}]: {config.get('_desc', '无描述')}")
         except Exception as e:
@@ -94,24 +94,34 @@ class AutoFighter:
             # --- 规则3: 大于等于 100 的逻辑 ---
             final_interval = raw_interval
             
+            # 根据尾数判断分类：尾数为0归为线程执行，尾数非0归为同步执行
+            if raw_interval % 10 == 0:  # 尾数为0
+                self.threaded_shortcuts.append({"key": buff_key, "interval": final_interval})
+            else:  # 尾数非0
+                self.sync_shortcuts.append({"key": buff_key, "interval": final_interval})
+            
             # 隐藏规则：百位十位相同的 buff (如 888、777 等)，在延迟启动后立即释放第一次，
             # 然后才根据间隔继续释放；其他 buff 则延迟启动后才开始计时
+            # 隐藏规则：百位十位相同的 buff (如 888、777 等)
             is_special_format = False
+            
+            # 这里的 raw_interval 可能是 float (例如 333.0)，比较数值大小没问题
             if raw_interval <= 999:
-                str_num = str(raw_interval)
+                # 关键修改：先 int() 取整，再 str() 转字符串
+                # 333.0 -> 333 -> "333" (长度为3)
+                str_num = str(int(raw_interval))
+                
                 if len(str_num) == 3 and str_num[1] == str_num[0]:
                     is_special_format = True
             
             if is_special_format:
+                # 如果想"开局立即释放"，通常设为： current_time - final_interval
                 self.last_release_times[buff_key] = current_time - final_interval
+                logger.info(f"特殊格式 Buff [{buff_key}] 设定，启动后{self.buff_start_delay}s释放第一次")
             else:
                 self.last_release_times[buff_key] = current_time
+                logger.info(f"Buff [{buff_key}] 设定，启动后延迟释放(当经过{self.buff_start_delay}s后开始释放)")
 
-            if raw_interval % 10 == 0:
-                self.threaded_shortcuts.append({"key": buff_key, "interval": final_interval})
-            else:
-                self.sync_shortcuts.append({"key": buff_key, "interval": final_interval})
-        
         # ================== 用户友好型输出逻辑 ==================
         msg = "\n" + "="*40 + "\n"
         msg += "        Buff 系统加载报告\n"
@@ -182,8 +192,12 @@ class AutoFighter:
                         self.driver.press(buff_key)
                         
                         # 简单的日志记录，避免刷屏
-                        if interval > 1: 
-                            logger.info(f"线程释放无硬直Buff: {buff_key}")
+                        # if interval > 1: 
+                        #     logger.info(f"线程释放无硬直Buff: {buff_key}")
+                        
+                        # 大于30秒的buff要输出日志
+                        if interval > 30:
+                            logger.info(f"长时间Buff: {buff_key} (间隔: {interval}秒)")
 
                 # 保持 0.1s 心跳，避免 CPU 100%
                 time.sleep(0.1)
@@ -203,14 +217,21 @@ class AutoFighter:
         # 检查是否达到 Buff 启动延迟时间
         if current_time - self.start_time < self.buff_start_delay:
             return
-        
+
         for conf in self.sync_shortcuts:
             buff_key = conf["key"]
             interval = conf["interval"]
-            
+            # self.driver.wait(1)  # 确保当前没有动作硬直
+            # logger.info(f"conf: {conf}")
+            # logger.info(f"实际间隔: {current_time - self.last_release_times.get(buff_key, 0)}")
+            # logger.info(f"要求间隔: {interval}")
             if current_time - self.last_release_times.get(buff_key, 0) >= interval:
                 self.last_release_times[buff_key] = current_time
-                logger.info(f"主循环释放硬直Buff: {buff_key}")
+                logger.info(f"主循环释n'gBuff: {buff_key}")
+                
+                # 大于30秒的buff要输出日志
+                if interval > 30:
+                    logger.info(f"长时间Buff: {buff_key} (间隔: {interval}秒)")
                 
                 # 模拟硬直：暂停 -> 按键 -> 暂停
                 time.sleep(0.5)

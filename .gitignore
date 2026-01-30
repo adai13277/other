@@ -7,3 +7,8 @@
 dist
 build
 /note/src/__pycache__
+note/src/ConfigEditor.spec
+note/src/ConfigEditor.exe
+note/src/AutoFighter.exe
+note/anser.txt
+note/auto_fighter.log

@@ -36,12 +36,12 @@ if exist "AutoFighter.exe" (
 ) else (
     echo.
     echo [ERROR] 错误：未找到 AutoFighter.exe
-    echo.
-    echo [INFO] 解决方案：
-    echo   1. 运行打包脚本: python build_all.py
-    echo   2. 或单独打包: python build_main_exe.py
-    echo.
-    echo 按任意键退出...
+    CALL conda activate venv313
+
+    echo 正在以交互模式运行 main.py...
+    echo -------------------------------------
+    python -i main.py
+    echo -------------------------------------
     pause > nul
 )
 

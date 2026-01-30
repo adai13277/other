@@ -41,7 +41,15 @@ PYAUTOGUI_KEYS = [
 class ConfigEditorGUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+        # 修改路径逻辑以兼容打包后的路径
+        if getattr(sys, 'frozen', False):
+            # 如果是打包后的 exe，路径是可执行文件所在的目录
+            self.base_dir = os.path.dirname(sys.executable)
+        else:
+            # 如果是脚本运行，路径是文件所在的目录
+            self.base_dir = os.path.dirname(os.path.abspath(__file__))
+
+        self.config_path = os.path.join(self.base_dir, 'config.json')
         self.current_config = {}
         
         # 从JSON文件加载action帮助信息
@@ -57,18 +65,25 @@ class ConfigEditorGUI(QMainWindow):
         """从action_help.json加载攻击模式信息"""
         methods = {}
         try:
-            help_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'action_help.json')
-            with open(help_path, 'r', encoding='utf-8') as f:
-                help_data = json.load(f)
+            # 使用 self.base_dir 确保读取的是 EXE 同级目录下的文件
+            help_path = os.path.join(self.base_dir, 'action_help.json')
             
-            actions = help_data.get('actions', {})
-            for name, info in actions.items():
-                methods[name] = {
-                    'desc': info.get('desc', ''),
-                    'params': info.get('params', []),
-                    'default_args': info.get('default_args', []),
-                    'param_explanation': info.get('param_explanation', '')
-                }
+            if os.path.exists(help_path):
+                with open(help_path, 'r', encoding='utf-8') as f:
+                    help_data = json.load(f)
+                
+                actions = help_data.get('actions', {})
+                for name, info in actions.items():
+                    methods[name] = {
+                        'desc': info.get('desc', ''),
+                        'params': info.get('params', []),
+                        'default_args': info.get('default_args', []),
+                        'param_explanation': info.get('param_explanation', '')
+                    }
+            else:
+                # 如果文件不存在，给个默认值防止报错，或者静默处理
+                print(f"Warning: {help_path} 不存在")
+                
         except Exception as e:
             print(f"加载action_help.json失败: {e}")
         
@@ -137,41 +152,22 @@ class ConfigEditorGUI(QMainWindow):
     def run_external_program(self):
         """
         运行 AutoFighter 主程序
-        支持以下几种启动方式（优先级从高到低）:
-        1. AutoFighter.exe (打包版本)
-        2. start.cmd (批处理文件)
-        3. 当前目录中的 main.py
+        只查找根目录下的 AutoFighter.exe 文件并启动
         """
-        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # 获取项目根目录（config_editor_gui.py 的上一级目录）
+        current_dir = self.base_dir
         parent_dir = os.path.dirname(current_dir)  # 项目根目录
         
-        # 可能的可执行文件位置
-        possible_targets = [
-            (os.path.join(current_dir, "AutoFighter.exe"), "AutoFighter.exe (主程序)"),
-            (os.path.join(current_dir, "start.cmd"), "start.cmd (批处理)"),
-            (os.path.join(parent_dir, "AutoFighter.exe"), "AutoFighter.exe (项目根目录)"),
-        ]
+        # 只查找根目录下的 AutoFighter.exe
+        target_path = os.path.join(parent_dir, "AutoFighter.exe")
         
-        target = None
-        target_desc = None
-        
-        # 查找可用的启动文件
-        for target_path, desc in possible_targets:
-            if os.path.exists(target_path):
-                target = target_path
-                target_desc = desc
-                break
-        
-        if not target:
+        if not os.path.exists(target_path):
             QMessageBox.warning(
                 self, 
                 "❌ 启动失败", 
-                "未找到 AutoFighter.exe 或 start.cmd\n\n"
-                "请确保文件存在于以下位置之一:\n"
-                f"1. {current_dir}\\AutoFighter.exe\n"
-                f"2. {current_dir}\\start.cmd\n"
-                f"3. {parent_dir}\\AutoFighter.exe\n\n"
-                "提示: 你可以使用 build_all.py 脚本自动打包"
+                "未找到根目录下的 AutoFighter.exe\n\n"
+                f"查找路径: {target_path}\n\n"
+                "请确保 AutoFighter.exe 文件存在于项目根目录中"
             )
             return
         
@@ -180,39 +176,24 @@ class ConfigEditorGUI(QMainWindow):
             self.save_config()
             
             # 显示正在启动的消息
-            print(f"[INFO] 正在启动: {target_desc}")
-            print(f"[INFO] 程序路径: {target}")
+            print(f"[INFO] 正在启动: AutoFighter.exe")
+            print(f"[INFO] 程序路径: {target_path}")
             
-            # 启动程序
-            if target.endswith(".exe"):
-                # 直接运行 exe
-                subprocess.Popen(
-                    [target],
-                    cwd=current_dir,
-                    shell=False
-                )
-            else:
-                # 运行 cmd 文件
-                subprocess.Popen(
-                    [target],
-                    cwd=current_dir,
-                    shell=True
-                )
-            
-            QMessageBox.information(
-                self, 
-                "✅ 启动成功", 
-                f"已启动: {target_desc}\n\n"
-                "主程序将在后台运行\n"
-                "你可以继续编辑配置"
+            # 启动程序 - 不隐藏cmd窗口
+            subprocess.Popen(
+                [target_path],
+                cwd=parent_dir,  # 在根目录下启动
+                shell=False
             )
+            
+            print(f"[INFO] 已启动: AutoFighter.exe")
             
         except Exception as e:
             QMessageBox.critical(
                 self, 
                 "❌ 启动失败", 
                 f"无法启动程序:\n{str(e)}\n\n"
-                f"尝试的文件: {target}"
+                f"尝试的文件: {target_path}"
             )
 
     def create_basic_tab(self):
@@ -299,7 +280,7 @@ class ConfigEditorGUI(QMainWindow):
         self.license_key_input.setPlaceholderText("在此处粘贴 License Key")
         license_layout.addRow('License Key:', self.license_key_input)
 
-        # 按钮区域：验证 + 获取机器码
+        # 按钮区域：验证 + 获取机器码 + 粘贴验证
         btn_layout = QHBoxLayout()
         
         self.verify_license_btn = QPushButton('🔍 验证 License')
@@ -310,8 +291,13 @@ class ConfigEditorGUI(QMainWindow):
         self.machine_code_btn.clicked.connect(self.show_machine_code)
         self.machine_code_btn.setStyleSheet("padding: 5px;")
         
+        self.paste_verify_btn = QPushButton('📋 粘贴并验证')
+        self.paste_verify_btn.clicked.connect(self.paste_and_verify_license)
+        self.paste_verify_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 5px;")
+        
         btn_layout.addWidget(self.verify_license_btn)
         btn_layout.addWidget(self.machine_code_btn)
+        btn_layout.addWidget(self.paste_verify_btn)
         btn_layout.addStretch()
         
         license_layout.addRow('', btn_layout)
@@ -405,7 +391,7 @@ class ConfigEditorGUI(QMainWindow):
         if enabled and spinbox.value() == 0:
             spinbox.setValue(180) # 默认给个数值方便编辑
 
-    def load_config(self):
+    def load_config(self, is_startup=False):
         """加载配置"""
         try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
@@ -433,7 +419,6 @@ class ConfigEditorGUI(QMainWindow):
             if self.license_key_input.toPlainText().strip():
                 self._verify_license_silent()
             
-            QMessageBox.information(self, '✅ 成功', '配置加载完成')
         except Exception as e:
             QMessageBox.warning(self, '⚠️ 错误', f'加载失败: {e}')
 
@@ -660,7 +645,31 @@ class ConfigEditorGUI(QMainWindow):
         return self.validator.get_machine_fingerprint()
 
     def reset_to_default(self):
+        # 保存当前的license key
+        current_license_key = self.license_key_input.toPlainText().strip()
+        
+        # 重新加载配置文件（恢复默认）
         self.load_config()
+        
+        # 恢复license key
+        if current_license_key:
+            self.license_key_input.setText(current_license_key)
+            self._verify_license_silent()
+
+    def paste_and_verify_license(self):
+        """从剪贴板粘贴License Key并执行验证"""
+        clipboard = QApplication.clipboard()
+        text = clipboard.text().strip()
+        
+        if not text:
+            QMessageBox.warning(self, '⚠️ 提示', '剪贴板中没有内容')
+            return
+        
+        # 将剪贴板内容填入输入框
+        self.license_key_input.setText(text)
+        
+        # 执行验证逻辑
+        self.verify_license()
 
 def main():
     # 隐藏cmd窗口（仅Windows）
