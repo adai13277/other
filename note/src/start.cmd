@@ -18,6 +18,15 @@ echo   AutoFighter - 游戏自动化助手
 echo ======================================================
 echo.
 
+CALL conda activate venv313
+
+echo 正在以交互模式运行 main.py...
+echo -------------------------------------
+python -i main.py
+echo -------------------------------------
+pause > nul
+endlocal
+
 REM 尝试启动 AutoFighter.exe
 if exist "AutoFighter.exe" (
     echo [INFO] 正在启动主程序...

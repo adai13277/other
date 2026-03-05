@@ -161,7 +161,7 @@ class LicenseGeneratorGUI(QMainWindow):
             """)
             return sb
 
-        self.days_spinbox = create_time_spinbox(7, 1)
+        self.days_spinbox = create_time_spinbox(31, 1)
         self.hours_spinbox = create_time_spinbox(23, 0)
         self.minutes_spinbox = create_time_spinbox(59, 0)
         
@@ -181,7 +181,7 @@ class LicenseGeneratorGUI(QMainWindow):
         quick_btn_layout = QHBoxLayout()
         quick_btn_layout.setSpacing(15)
         
-        quick_options = [("1天", 1), ("3天", 3), ("7天", 7)]
+        quick_options = [("3天", 3), ("10天", 10), ("30天", 30)]
         
         for label, days in quick_options:
             btn = QPushButton(label)
@@ -367,10 +367,10 @@ class LicenseGeneratorGUI(QMainWindow):
                 return
             
             total_minutes = days * 24 * 60 + hours * 60 + minutes
-            max_minutes = 7 * 24 * 60
+            max_minutes = 31 * 24 * 60
             if total_minutes > max_minutes:
-                 QMessageBox.warning(self, '⚠️ 提示', '有效期不能超过 7 天')
-                 self.days_spinbox.setValue(7)
+                 QMessageBox.warning(self, '⚠️ 提示', '有效期不能超过 31 天')
+                 self.days_spinbox.setValue(31)
                  self.hours_spinbox.setValue(0)
                  self.minutes_spinbox.setValue(0)
                  return

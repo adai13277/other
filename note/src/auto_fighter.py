@@ -4,7 +4,6 @@ import threading
 import json
 import os
 import sys
-from action_driver import ActionDriver
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +13,13 @@ class AutoFighter:
         self.stop_event = threading.Event()
         self.running = True
         
-        # 记录程序启动时间（用于 Buff 延迟启动）
         self.start_time = time.time()
-        self.buff_start_delay = 5  # Buff 启动延迟（秒），可通过 config 覆盖
+        self.buff_start_delay = 5 
         
-        # 1. 实例化动作驱动器 (Hand)
-        self.driver = ActionDriver(self.stop_event)
+        # 1. 动态导入动作驱动器
+        self.driver = self._load_action_driver()
         
         # 2. 将 Sync Buff 的检查逻辑注册给驱动器
-        # 这样驱动器在执行长时间动作(如 wait 或 hold_keys)时，会自动回调这里
         self.driver.set_heartbeat(self.check_sync_buffs)
 
         # 3. 读取配置
@@ -30,6 +27,28 @@ class AutoFighter:
         
         # 4. 初始化 Buff 计时器
         self.init_buff_timers()
+
+    def _load_action_driver(self):
+        """动态加载 ActionDriver 类"""
+        import sys
+        import os
+        import importlib # 引入 importlib
+        
+        if getattr(sys, "frozen", False):
+            base_path = os.path.dirname(sys.executable)
+            if base_path not in sys.path:
+                sys.path.insert(0, base_path)
+
+        try:
+            # 首次导入
+            import action_driver
+            # 强制重新加载模块（实现修改后重启立即生效，或者支持后续的热更新）
+            importlib.reload(action_driver) 
+            
+            return action_driver.ActionDriver(self.stop_event)
+        except ImportError as e:
+            logger.error(f"无法导入 action_driver 模块: {e}")
+            raise RuntimeError("action_driver.py 文件缺失或导入失败")
         
     def load_config_from_json(self):
         config_path = 'config.json'
@@ -53,99 +72,47 @@ class AutoFighter:
             self.action_sequence = config["action_sequence"]
             self.is_buff = config["is_buff"]
             self.runTime = config["runTime"]
-            # 从 config 中读取 buff 启动延迟（如果有），否则使用默认值
-            
             
             logger.info(f"已加载配置 [{use_config}]: {config.get('_desc', '无描述')}")
         except Exception as e:
             logger.error(f"读取配置失败: {e}")
             raise
 
-
     def init_buff_timers(self):
-        """
-        Buff 分类逻辑 v3 (最终版):
-        1. interval < 0: 禁用 (跳过)
-        2. interval < 100: 强制归为无间隔 (线程执行)
-        3. interval >= 100:
-           - 尾数为 0: 无间隔 (线程执行)
-           - 尾数非 0: 有间隔 (主循环同步执行)
-        """
         self.last_release_times = {}
         self.threaded_shortcuts = [] 
         self.sync_shortcuts = []     
 
         current_time = time.time()
+        
         for conf in self.shortcuts:
             raw_interval = conf["interval"] 
             buff_key = conf["key"]
+            buff_type = conf.get("type", "non_stun")
+            delay_enabled = conf.get("delay_enabled", False)
             
-            # --- 规则1: 负数直接过滤 ---
+            if isinstance(raw_interval, float):
+                raw_interval = int(raw_interval)
+            
             if raw_interval < 0:
                 continue
 
-            # --- 规则2: 小于 100 的统统进线程 ---
-            if raw_interval < 100:
-                self.threaded_shortcuts.append({"key": buff_key, "interval": raw_interval})
-                # 初始化为当前时间，结合启动延迟机制确保 buff 延迟释放
-                self.last_release_times[buff_key] = current_time
-                continue
-
-            # --- 规则3: 大于等于 100 的逻辑 ---
-            final_interval = raw_interval
-            
-            # 根据尾数判断分类：尾数为0归为线程执行，尾数非0归为同步执行
-            if raw_interval % 10 == 0:  # 尾数为0
-                self.threaded_shortcuts.append({"key": buff_key, "interval": final_interval})
-            else:  # 尾数非0
-                self.sync_shortcuts.append({"key": buff_key, "interval": final_interval})
-            
-            # 隐藏规则：百位十位相同的 buff (如 888、777 等)，在延迟启动后立即释放第一次，
-            # 然后才根据间隔继续释放；其他 buff 则延迟启动后才开始计时
-            # 隐藏规则：百位十位相同的 buff (如 888、777 等)
-            is_special_format = False
-            
-            # 这里的 raw_interval 可能是 float (例如 333.0)，比较数值大小没问题
-            if raw_interval <= 999:
-                # 关键修改：先 int() 取整，再 str() 转字符串
-                # 333.0 -> 333 -> "333" (长度为3)
-                str_num = str(int(raw_interval))
-                
-                if len(str_num) == 3 and str_num[1] == str_num[0]:
-                    is_special_format = True
-            
-            if is_special_format:
-                # 如果想"开局立即释放"，通常设为： current_time - final_interval
-                self.last_release_times[buff_key] = current_time - final_interval
-                logger.info(f"特殊格式 Buff [{buff_key}] 设定，启动后{self.buff_start_delay}s释放第一次")
+            if delay_enabled:
+                self.last_release_times[buff_key] = current_time - raw_interval - 10
+                status_msg = f"启动5秒后立即释放"
             else:
                 self.last_release_times[buff_key] = current_time
-                logger.info(f"Buff [{buff_key}] 设定，启动后延迟释放(当经过{self.buff_start_delay}s后开始释放)")
+                status_msg = f"启动后等待冷却 ({raw_interval}s)"
 
-        # ================== 用户友好型输出逻辑 ==================
-        msg = "\n" + "="*40 + "\n"
-        msg += "        Buff 系统加载报告\n"
-        msg += "="*40 + "\n"
-
-        msg += "【1】极速模式 (独立线程/无视动作硬直):\n"
-        if not self.threaded_shortcuts:
-            msg += "   (无)\n"
-        else:
-            for item in self.threaded_shortcuts:
-                desc = "无间隔连点" if item['interval'] == 0 else f"每 {item['interval']} 秒"
-                msg += f"   ► 按键 [{item['key'].upper()}] : {desc}\n"
-
-        msg += "\n【2】同步模式 (主循环/等待动作空闲):\n"
-        if not self.sync_shortcuts:
-            msg += "   (无)\n"
-        else:
-            for item in self.sync_shortcuts:
-                msg += f"   ► 按键 [{item['key'].upper()}] : 每 {item['interval']} 秒 (安全释放)\n"
+            if buff_type == "non_stun":
+                self.threaded_shortcuts.append({"key": buff_key, "interval": raw_interval, "delay_enabled": delay_enabled})
+                logger.info(f"无硬直Buff [{buff_key}] 设定: {status_msg}")
+            elif buff_type == "stun":
+                self.sync_shortcuts.append({"key": buff_key, "interval": raw_interval, "delay_enabled": delay_enabled})
+                logger.info(f"硬直Buff [{buff_key}] 设定: {status_msg}")
         
-        msg += "="*40
-        logger.info(msg)
+        logger.info("Buff 系统初始化完成")
 
-        
     def getRunTime(self):
         return self.runTime
 
@@ -158,22 +125,17 @@ class AutoFighter:
 
     # ------------------------------ Buff 逻辑 ------------------------------
     
-    # 逻辑1：独立线程运行 (对应尾数为0的配置)
     def run_threaded_buffs(self):
-        """
-        专门处理尾数为0的Buff。
-        修复：必须严格检查时间间隔，防止刷屏。
-        """
+        """处理无硬直 Buff"""
         if not self.is_buff or not self.threaded_shortcuts:
-            logger.info("无符合条件的线程Buff，监控停止")
             return
 
         logger.info("启动线程 Buff 监控")
         try:
             while not self.should_stop():
                 current_time = time.time()
-                # 检查是否达到 Buff 启动延迟时间
-                if current_time - self.start_time < self.buff_start_delay:
+                
+                if current_time - self.start_time < 5:
                     time.sleep(0.1)
                     continue
                 
@@ -181,101 +143,103 @@ class AutoFighter:
                     buff_key = conf["key"]
                     interval = conf["interval"]
                     
-                    # 严格的时间检查！
-                    # 如果 interval 是 0，则真的无间隔一直按 (小心使用)
-                    # 如果 interval 是 900，则每 900 秒按一次
                     if current_time - self.last_release_times.get(buff_key, 0) >= interval:
                         self.last_release_times[buff_key] = current_time
-                        
-                        # 调用 driver 按键
-                        # 使用 press，不带延迟，实现"无硬直"效果
                         self.driver.press(buff_key)
                         
-                        # 简单的日志记录，避免刷屏
-                        # if interval > 1: 
-                        #     logger.info(f"线程释放无硬直Buff: {buff_key}")
-                        
-                        # 大于30秒的buff要输出日志
                         if interval > 30:
-                            logger.info(f"长时间Buff: {buff_key} (间隔: {interval}秒)")
+                            logger.info(f"线程Buff释放: {buff_key}")
 
-                # 保持 0.1s 心跳，避免 CPU 100%
                 time.sleep(0.1)
         except Exception as e:
             logger.error(f"线程Buff异常: {e}")
 
-    # 逻辑2：被 driver 回调 (对应尾数非0的配置)
     def check_sync_buffs(self):
         """
         在主循环间隙调用。
-        处理有硬直的 Buff (需要暂停移动来释放)。
+        【核心修改】：只有当真正需要放Buff时，才去暂停攻击
         """
         if not self.is_buff:
             return
 
         current_time = time.time()
-        # 检查是否达到 Buff 启动延迟时间
-        if current_time - self.start_time < self.buff_start_delay:
+        if current_time - self.start_time < 5:
             return
 
+        # 1. 先检查有哪些 Buff 已经就绪
+        pending_buffs = []
         for conf in self.sync_shortcuts:
             buff_key = conf["key"]
             interval = conf["interval"]
-            # self.driver.wait(1)  # 确保当前没有动作硬直
-            # logger.info(f"conf: {conf}")
-            # logger.info(f"实际间隔: {current_time - self.last_release_times.get(buff_key, 0)}")
-            # logger.info(f"要求间隔: {interval}")
+            
             if current_time - self.last_release_times.get(buff_key, 0) >= interval:
+                pending_buffs.append(conf)
+
+        # 2. 如果没有 Buff 要放，直接返回！
+        # 此时 Driver 里的 wait 方法没有收到任何暂停指令，按键会一直保持按下，不会有卡顿。
+        if not pending_buffs:
+            return
+
+        # 3. 确实有 Buff 要放，现在开始接管控制权
+        logger.info(f"检测到Buff就绪: {[b['key'] for b in pending_buffs]}，正在暂停攻击...")
+        
+        # A. 暂停攻击 (Driver 会记录当前按键并松开)
+        self.driver.pause_recorded_keys()
+        
+        try:
+            for conf in pending_buffs:
+                if self.should_stop(): break
+                
+                buff_key = conf["key"]
+                
+                # 更新时间
                 self.last_release_times[buff_key] = current_time
-                logger.info(f"主循环释n'gBuff: {buff_key}")
                 
-                # 大于30秒的buff要输出日志
-                if interval > 30:
-                    logger.info(f"长时间Buff: {buff_key} (间隔: {interval}秒)")
+                logger.info(f"执行同步Buff: {buff_key}")
                 
-                # 模拟硬直：暂停 -> 按键 -> 暂停
+                # 模拟硬直/等待角色站稳
+                time.sleep(0.8) 
+                
+                # 释放技能 (duration 确保按键有效)
+                self.driver.press(buff_key, duration=0.2)
+                
+                # 后摇缓冲
                 time.sleep(0.5)
-                # 使用 duration 模拟长按或等待，确保技能放出来
-                self.driver.press(buff_key, duration=0.5)
+                
+        except Exception as e:
+            logger.error(f"释放Buff时出错: {e}")
+        finally:
+            # B. 恢复攻击 (Driver 会把刚才暂停的键按回去)
+            if not self.should_stop():
+                logger.info("Buff释放完毕，恢复攻击")
+                self.driver.resume_recorded_keys()
 
     # ------------------------------ 主循环 ------------------------------
     def run(self):
-        # 获取当前配置的总体描述 (依然从 JSON 读取配置名的描述)
         scheme_desc = self.current_desc if hasattr(self, 'current_desc') else '未命名配置'
         logger.info(f"战斗逻辑启动 | 当前方案: {scheme_desc}")
         
         try:
             while not self.should_stop():
-                # 遍历执行配置中的动作序列
                 for action in self.action_sequence:
                     if self.should_stop(): break
                     
                     func_name = action["function"]
                     args = action.get("args", [])
                     
-                    # 1. 从 driver 中获取函数对象
                     func = getattr(self.driver, func_name, None)
                     
                     if callable(func):
-                        # 2. 【核心修改】尝试获取函数上绑定的描述
-                        # 如果开发人员忘了加装饰器，则默认显示函数名
-                        action_desc = getattr(func, '_action_desc', f"执行指令: {func_name}")
-                        
-                        # 3. 输出日志
-                        # INFO 给小白看
-                        logger.info(f"正在执行: {action_desc}")
-                        # DEBUG 给开发看参数
-                        logger.debug(f"指令详情: {func_name} | 参数: {args}")
-                        
-                        # 4. 执行函数
+                        action_desc = getattr(func, '_action_desc', f"{func_name}")
+                        logger.info(f"执行: {action_desc}")
                         func(*args)
                     else:
-                        logger.warning(f"配置错误: 找不到指令 [{func_name}]，跳过。")
+                        logger.warning(f"指令 [{func_name}] 不存在，跳过。")
                 
                 # 动作间隙等待
                 self.driver.wait(0.1)
                 
         except Exception as e:
-            logger.error(f"战斗循环发生异常: {e}", exc_info=True)
+            logger.error(f"战斗循环异常: {e}", exc_info=True)
         finally:
             logger.info("战斗逻辑已停止")

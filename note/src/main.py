@@ -12,7 +12,7 @@ from tools.license_validator import LicenseValidator
 
 # ================= 授权配置区 =================
 # 格式: "YYYY-MM-DD", 例如 "2026-02-20"
-EXPIRATION_DATE = "2026-02-20"
+EXPIRATION_DATE = "2026-04-20"
 
 # 公钥（硬编码）
 PUBLIC_KEY = """-----BEGIN PUBLIC KEY-----
