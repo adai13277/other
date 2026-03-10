@@ -83,44 +83,12 @@ class ConfigEditorGUI(QMainWindow):
                         'param_examples': self._get_param_examples_from_json(info.get('default_args', []))
                     }
             else:
-                # 如果文件不存在，给个默认值防止报错，或者静默处理
-                print(f"Warning: {help_path} 不存在")
-                
-        except Exception as e:
-            print(f"加载action_help.json失败: {e}")
-            # 如果JSON加载失败，尝试动态加载action_driver作为备用
-            methods = self._load_action_help_from_action_driver()
-        
-        return methods
-    
-    def _load_action_help_from_json(self):
-        """从action_help.json加载攻击模式信息（备用方案）"""
-        methods = {}
-        try:
-            # 使用 self.base_dir 确保读取的是 EXE 同级目录下的文件
-            help_path = os.path.join(self.base_dir, 'action_help.json')
-            
-            if os.path.exists(help_path):
-                with open(help_path, 'r', encoding='utf-8') as f:
-                    help_data = json.load(f)
-                
-                actions = help_data.get('actions', {})
-                for name, info in actions.items():
-                    methods[name] = {
-                        'desc': info.get('desc', ''),
-                        'params': info.get('params', []),
-                        'default_args': info.get('default_args', []),
-                        'param_explanation': info.get('param_explanation', '')
-                    }
-            else:
-                # 如果文件不存在，给个默认值防止报错，或者静默处理
                 print(f"Warning: {help_path} 不存在")
                 
         except Exception as e:
             print(f"加载action_help.json失败: {e}")
         
         return methods
-
 
     def _get_param_types_from_json(self, default_args):
         """从默认参数推断参数类型"""
@@ -145,73 +113,8 @@ class ConfigEditorGUI(QMainWindow):
             examples.append(str(arg))
         return examples
 
-    def _load_action_help_from_action_driver(self):
-        """从action_driver动态加载攻击模式信息（备用方案）"""
-        methods = {}
-        try:
-            # 动态导入action_driver模块
-            import sys
-            sys.path.insert(0, self.base_dir)
-            from action_driver import ActionDriver
-            
-            # 先从action_help.json获取已配置的函数列表
-            help_path = os.path.join(self.base_dir, 'action_help.json')
-            configured_functions = set()
-            
-            if os.path.exists(help_path):
-                with open(help_path, 'r', encoding='utf-8') as f:
-                    help_data = json.load(f)
-                configured_functions = set(help_data.get('actions', {}).keys())
-            
-            # 获取ActionDriver类的所有方法，但只返回在action_help.json中配置的函数
-            for method_name in dir(ActionDriver):
-                if not method_name.startswith('_') and callable(getattr(ActionDriver, method_name)):
-                    # 只加载在action_help.json中有配置的函数
-                    if method_name not in configured_functions:
-                        continue
-                    
-                    method = getattr(ActionDriver, method_name)
-                    
-                    # 获取装饰器添加的描述
-                    desc = getattr(method, '_action_desc', '无描述')
-                    
-                    # 获取函数签名和文档字符串
-                    import inspect
-                    try:
-                        # 获取函数签名
-                        sig = inspect.signature(method)
-                        params = list(sig.parameters.keys())[1:]  # 跳过self参数
-                        
-                        # 获取文档字符串作为详细说明
-                        doc = inspect.getdoc(method) or '无参数说明'
-                        
-                        methods[method_name] = {
-                            'desc': desc,
-                            'params': params,
-                            'default_args': [],
-                            'param_explanation': doc,
-                            'param_types': [],
-                            'param_examples': []
-                        }
-                    except Exception as e:
-                        print(f"获取方法 {method_name} 信息失败: {e}")
-                        # 使用基本信息
-                        methods[method_name] = {
-                            'desc': desc,
-                            'params': [],
-                            'default_args': [],
-                            'param_explanation': '无法获取详细信息',
-                            'param_types': [],
-                            'param_examples': []
-                        }
-                        
-        except Exception as e:
-            print(f"动态加载action_driver失败: {e}")
-        
-        return methods
-
     def initUI(self):
-        self.setWindowTitle('⚙️ AutoFighter 配置编辑器 v2.2')
+        self.setWindowTitle('⚙️ 极速枫林（Maple Rush) v2.3')
         self.setGeometry(100, 100, 1300, 900)
         
         central = QWidget()
@@ -221,7 +124,7 @@ class ConfigEditorGUI(QMainWindow):
         # ==================== 顶部区域：标题 + 启动按钮 ====================
         top_bar = QHBoxLayout()
         
-        title_label = QLabel('⚙️ AutoFighter 配置编辑器')
+        title_label = QLabel('⚙️ 极速枫林（Maple Rush)')
         title_font = QFont()
         title_font.setPointSize(14)
         title_font.setBold(True)
@@ -253,7 +156,7 @@ class ConfigEditorGUI(QMainWindow):
         
         self.save_btn = QPushButton('💾 保存配置')
         self.save_btn.setStyleSheet("QPushButton { background-color: #4CAF50; color: white; font-weight: bold; padding: 10px; border-radius: 5px; font-size: 11pt; } QPushButton:hover { background-color: #45a049; }")
-        self.save_btn.clicked.connect(self.save_config)
+        self.save_btn.clicked.connect(lambda: self.save_config())
         
         self.reload_btn = QPushButton('🔄 重新加载')
         self.reload_btn.clicked.connect(self.load_config)
@@ -293,17 +196,23 @@ class ConfigEditorGUI(QMainWindow):
         
         try:
             # 保存当前配置（避免运行时配置丢失）
-            self.save_config()
+            self.save_config(show_msg=False)
             
             # 显示正在启动的消息
             print(f"[INFO] 正在启动: AutoFighter.exe")
             print(f"[INFO] 程序路径: {target_path}")
             
-            # 启动程序 - 不隐藏cmd窗口
+            # 启动程序 - 显式开启新的 CMD 窗口
+            creation_flags = 0
+            if sys.platform == 'win32':
+                # CREATE_NEW_CONSOLE = 0x00000010
+                creation_flags = 0x00000010
+            
             subprocess.Popen(
                 [target_path],
                 cwd=current_dir,  # 在配置编辑器目录下启动
-                shell=False
+                shell=False,
+                creationflags=creation_flags
             )
             
             print(f"[INFO] 已启动: AutoFighter.exe")
@@ -320,7 +229,7 @@ class ConfigEditorGUI(QMainWindow):
         widget = QWidget()
         layout = QVBoxLayout()
 
-        # 配置选择
+        # 配置选择 (省略原有代码，保持不变)
         select_group = QGroupBox('📝 选择配置方案')
         select_layout = QFormLayout()
         self.config_combo = QComboBox()
@@ -340,9 +249,7 @@ class ConfigEditorGUI(QMainWindow):
         
         # 填充带有描述的攻击模式（从JSON加载）
         for name, info in self.action_methods.items():
-            # 显示格式：loop_att (左右往返移动...)
             display_text = f"{name} ({info['desc']})"
-            # addItem(text, userData) -> userData 存储真实的函数名
             self.attack_mode_combo.addItem(display_text, name)
 
         self.attack_mode_combo.currentIndexChanged.connect(self.on_attack_mode_changed)
@@ -350,9 +257,11 @@ class ConfigEditorGUI(QMainWindow):
 
         # 函数名称输入框
         self.func_name_input = QLineEdit()
-        self.func_name_input.setPlaceholderText('此处显示选中的函数名，也可手动修改')
+        self.func_name_input.setReadOnly(True)  # 设置为只读
+        self.func_name_input.setStyleSheet("background-color: #f0f0f0; color: #555;") # 置灰显示
+        self.func_name_input.setPlaceholderText('此处显示选中的函数名')
         self.func_name_input.textChanged.connect(self._on_func_name_text_changed)
-        attack_layout.addRow('函数名称(编辑):', self.func_name_input)
+        attack_layout.addRow('函数名称:', self.func_name_input)
 
         # 模式说明
         self.attack_mode_desc = QLabel('')
@@ -360,17 +269,37 @@ class ConfigEditorGUI(QMainWindow):
         self.attack_mode_desc.setWordWrap(True)
         attack_layout.addRow('模式说明:', self.attack_mode_desc)
 
-        # 参数提示（新增参数解析）
+        # 参数提示
         self.params_hint = QLabel('')
-        self.params_hint.setStyleSheet("color: #ff9800; font-size: 9pt;")
+        self.params_hint.setStyleSheet("color: #333; font-size: 10pt; background-color: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 4px; padding: 8px;")
+        self.params_hint.setTextFormat(Qt.RichText)
         self.params_hint.setWordWrap(True)
-        attack_layout.addRow('参数说明:', self.params_hint)
+        self.params_hint.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        
+        # 使用滚动区域包裹参数说明，以便显示更多内容
+        self.params_scroll = QScrollArea()
+        self.params_scroll.setWidgetResizable(True)
+        self.params_scroll.setWidget(self.params_hint)
+        self.params_scroll.setMinimumHeight(250)  # 【关键点】：拉长显示区域
+        self.params_scroll.setStyleSheet("border: none; background-color: transparent;")
+        
+        attack_layout.addRow('参数说明:', self.params_scroll)
 
-        # 函数参数输入框
+        # ==================== 新增：动态参数配置区 ====================
+        self.dynamic_params_group = QGroupBox('🛠️ 参数精细配置')
+        # 【修改点】：使用垂直布局，内部包含两行水平布局
+        self.dynamic_params_layout = QVBoxLayout() 
+        self.dynamic_params_group.setLayout(self.dynamic_params_layout)
+        attack_layout.addRow(self.dynamic_params_group)
+        self.param_widgets = [] # 用于存储动态生成的控件引用
+
+        # ==================== 修改：函数参数输入框(改为只读显示) ====================
         self.params_input = QTextEdit()
-        self.params_input.setPlaceholderText('例如: ["a", 2, 0.5]')
+        self.params_input.setReadOnly(True)  # 设置为只读
+        self.params_input.setStyleSheet("background-color: #f0f0f0; color: #555;") # 置灰显示
+        self.params_input.setPlaceholderText('此处为自动生成的JSON参数预览，不可编辑')
         self.params_input.setMinimumHeight(60)
-        attack_layout.addRow('函数参数:', self.params_input)
+        attack_layout.addRow('JSON 预览:', self.params_input)
 
         attack_group.setLayout(attack_layout)
         layout.addWidget(attack_group)
@@ -379,7 +308,7 @@ class ConfigEditorGUI(QMainWindow):
         return widget
 
     def _on_func_name_text_changed(self, text):
-        """当手动修改函数名文本框时，尝试更新描述和参数说明"""
+        """当函数名文本变化时（如通过下拉框选择），同步更新描述和参数说明"""
         func_name = text.strip()
         if func_name and func_name in self.action_methods:
             info = self.action_methods[func_name]
@@ -392,24 +321,66 @@ class ConfigEditorGUI(QMainWindow):
             self.attack_mode_desc.setText('自定义或未知函数')
             self.params_hint.setText('')
 
+    def _get_color_for_param(self, param_name):
+        """根据参数名称返回对应的统一配色（HEX色值）"""
+        p_lower = param_name.lower()
+        if 'key' in p_lower:
+            return "#E91E63"  # 亮粉红色：代表按键类参数
+        elif 'direction' in p_lower:
+            return "#FF9800"  # 橙色：代表方向类参数
+        elif 't' in p_lower or 'interval' in p_lower or 'duration' in p_lower or 'time' in p_lower:
+            return "#2196F3"  # 蓝色：代表时间/时长类参数
+        else:
+            return "#009688"  # 蓝绿色：其他默认参数
+
     def _build_param_info(self, func_name, info):
-        """构建详细的参数说明信息"""
+        """构建详细的参数说明信息 (使用 HTML 富文本进行彩色排版)"""
         lines = []
         
-        # 函数签名
+        # 1. 函数签名着色
         params = info.get('params', [])
-        if params:
-            param_list = ', '.join(params)
-            lines.append(f"函数签名: {func_name}({param_list})")
-        else:
-            lines.append(f"函数签名: {func_name}()")
+        colored_params = []
+        for p in params:
+            color = self._get_color_for_param(p)
+            colored_params.append(f'<span style="color: {color}; font-weight: bold;">{p}</span>')
         
-        # 函数描述（从文档字符串）
+        if params:
+            param_list = ', '.join(colored_params)
+            lines.append(f"<div style='margin-bottom: 5px;'><b>函数签名:</b> {func_name}({param_list})</div>")
+        else:
+            lines.append(f"<div style='margin-bottom: 5px;'><b>函数签名:</b> {func_name}()</div>")
+        
+        # 2. 函数详细描述着色
         doc = info.get('param_explanation', '')
         if doc and doc != '无参数说明':
-            lines.append(f"\n详细说明:\n{doc}")
+            lines.append("<b>详细说明:</b>")
+            doc_lines = doc.split('\n')
+            
+            for line in doc_lines:
+                # 尝试解析 "参数名: 说明" 的格式
+                if ':' in line or '：' in line:
+                    separator = ':' if ':' in line else '：'
+                    parts = line.split(separator, 1)
+                    p_name = parts[0].strip()
+                    p_desc = parts[1].strip()
+                    
+                    # 检查这个名字是否在参数列表中
+                    matched_param = next((p for p in params if p_name == p), None)
+                    if matched_param:
+                        color = self._get_color_for_param(matched_param)
+                        lines.append(f"<div style='margin-left: 15px; margin-top: 3px;'>"
+                                     f"• <span style='color: {color}; font-weight: bold; font-size: 11pt;'>{p_name}</span>"
+                                     f" <span style='color: #888;'>——</span> "
+                                     f"<span style='color: #444;'>{p_desc}</span></div>")
+                    elif p_name == "说明":
+                        lines.append(f"<div style='margin-top: 6px; padding: 4px; background-color: #f8f9fa; border-left: 3px solid #ccc; color: #555;'>"
+                                     f"<b>💡 {p_name}:</b> {p_desc}</div>")
+                    else:
+                        lines.append(f"<div style='margin-left: 15px;'>• <b>{p_name}</b>: <span style='color: #444;'>{p_desc}</span></div>")
+                else:
+                    lines.append(f"<div style='color: #555;'>{line}</div>")
         
-        return '\n'.join(lines)
+        return ''.join(lines)
 
     def create_license_tab(self):
         widget = QWidget()
@@ -517,7 +488,7 @@ class ConfigEditorGUI(QMainWindow):
             spinbox.setEnabled(False)
 
             # 4. 【新增】开局等待复选框
-            delay_check = QCheckBox("5秒后施放")
+            delay_check = QCheckBox("开局5秒后立即施放一次")
             delay_check.setToolTip("勾选: 开局等待5秒后立即释放一次\n不勾选: 开局进入冷却，等待一个间隔后才释放")
             delay_check.setEnabled(False)
             
@@ -580,7 +551,7 @@ class ConfigEditorGUI(QMainWindow):
             spinbox.setEnabled(False)
 
             # 【新增】
-            delay_check = QCheckBox("5秒后施放")
+            delay_check = QCheckBox("开局5秒后立即施放一次")
             delay_check.setToolTip("勾选: 开局等待5秒后立即释放一次\n不勾选: 开局进入冷却，等待一个间隔后才释放")
             delay_check.setEnabled(False)
             
@@ -656,15 +627,20 @@ class ConfigEditorGUI(QMainWindow):
             configs = self.current_config.get('configs', {})
             self.config_combo.blockSignals(True)
             self.config_combo.clear()
-            self.config_combo.addItems(list(configs.keys()))
+            # 【修改点】：遍历配置并添加带有描述的选项，类似于攻击模式下拉框
+            for key in sorted(configs.keys(), key=lambda x: int(x) if x.isdigit() else x):
+                desc = configs[key].get('_desc', '')
+                display_text = f"{key} ({desc})" if desc else key
+                self.config_combo.addItem(display_text, key)
             self.config_combo.blockSignals(False)
             
             # Select Current Config
             use_config = self.current_config.get('use_config', '1')
-            if use_config in configs:
-                self.config_combo.setCurrentText(use_config)
-            elif configs:
-                self.config_combo.setCurrentText(list(configs.keys())[0])
+            index = self.config_combo.findData(use_config)
+            if index >= 0:
+                self.config_combo.setCurrentIndex(index)
+            elif self.config_combo.count() > 0:
+                self.config_combo.setCurrentIndex(0)
 
             self.on_config_changed() # 刷新详细界面
             
@@ -678,7 +654,8 @@ class ConfigEditorGUI(QMainWindow):
             QMessageBox.warning(self, '⚠️ 错误', f'加载失败: {e}')
 
     def on_config_changed(self):
-        config_num = self.config_combo.currentText()
+        # 【修改点】：从下拉框获取数据(配置ID)
+        config_num = self.config_combo.currentData()
         if not config_num: return
         
         config = self.current_config.get('configs', {}).get(config_num, {})
@@ -688,14 +665,18 @@ class ConfigEditorGUI(QMainWindow):
         
         # 2. 攻击模式
         action_seq = config.get('action_sequence', [])
+        
+        self._is_loading_config = True # 设置标志位，告知系统当前正在加载配置
+        
         if action_seq:
             func_name = action_seq[0].get('function', '')
             args = action_seq[0].get('args', [])
             
-            # 设置函数名文本框
+            # 设置函数名文本框和 JSON 文本预览框
             self.func_name_input.setText(func_name)
+            self.params_input.setText(json.dumps(args, ensure_ascii=False))
             
-            # 屏蔽下拉框信号，防止 setCurrentIndex 触发 on_attack_mode_changed
+            # 屏蔽下拉框信号，防止 setCurrentIndex 触发误操作
             self.attack_mode_combo.blockSignals(True)
             index = self.attack_mode_combo.findData(func_name)
             if index >= 0:
@@ -704,13 +685,17 @@ class ConfigEditorGUI(QMainWindow):
                 self.attack_mode_combo.setCurrentIndex(0)
             self.attack_mode_combo.blockSignals(False)
             
-            self.params_input.setText(json.dumps(args, ensure_ascii=False))
+            # 手动触发参数动态输入框的渲染
+            self.on_attack_mode_changed()
         else:
             self.attack_mode_combo.setCurrentIndex(0)
             self.func_name_input.clear()
             self.params_input.clear()
+            self._build_dynamic_param_inputs("", [])
             
-        # 3. Buff 配置 (加载到槽位)
+        self._is_loading_config = False # 清除标志位
+            
+        # 3. Buff 配置 (加载到槽位) —— 原有代码保持不变
         shortcuts = config.get('SHORTCUTS', [])
         
         # 先清空所有槽位
@@ -767,16 +752,200 @@ class ConfigEditorGUI(QMainWindow):
             self.func_name_input.setText(func_name)
             
             # 获取默认参数
+            default_args = []
             if func_name in self.action_methods:
                 default_args = self.action_methods[func_name].get('default_args', [])
-                self.params_input.setText(json.dumps(default_args, ensure_ascii=False))
+            
+            # 判断是否从文件加载，非加载状态下使用默认参数
+            if getattr(self, '_is_loading_config', False):
+                try:
+                    current_args = json.loads(self.params_input.toPlainText())
+                except json.JSONDecodeError:
+                    current_args = default_args
+            else:
+                current_args = default_args
+                self.params_input.setText(json.dumps(current_args, ensure_ascii=False))
+                
+            # 动态构建输入框
+            self._build_dynamic_param_inputs(func_name, current_args)
         else:
             self.func_name_input.clear()
             self.params_input.clear()
+            self._build_dynamic_param_inputs("", [])
 
-    def save_config(self):
+    def _build_dynamic_param_inputs(self, func_name, current_args):
+        """根据当前配置动态构建分离的输入框 (上下两行排列)"""
+        # 【修改点】：清空现有的动态输入框 (适配 QVBoxLayout)
+        while self.dynamic_params_layout.count():
+            item = self.dynamic_params_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                # 递归清空子布局
+                self._clear_layout(item.layout())
+                
+        self.param_widgets = []
+        self._is_updating_ui = True # 防止信号循环触发
+        
+        if not func_name or func_name not in self.action_methods:
+            self._is_updating_ui = False
+            return
+            
+        info = self.action_methods[func_name]
+        params = info.get('params', [])
+        default_args = info.get('default_args', [])
+        explanation = info.get('param_explanation', '')
+        
+        # 【修改点】：创建两行布局
+        row1_layout = QHBoxLayout() # 上行：key/方向
+        row2_layout = QHBoxLayout() # 下行：数字/其他
+        
+        row1_layout.addStretch()
+        row2_layout.addStretch()
+
+        has_row1 = False
+        has_row2 = False
+
+        for i, p_name in enumerate(params):
+            # 获取默认值和当前值
+            default_val = default_args[i] if i < len(default_args) else ""
+            current_val = current_args[i] if i < len(current_args) else default_val
+            
+            # 提取提示信息用于悬浮框
+            tooltip = self._get_param_tooltip(p_name, explanation)
+            
+            # 【修改点】：获取颜色并使用 HTML 格式化 Label
+            color = self._get_color_for_param(p_name)
+            label = QLabel(f"<span style='color: {color}; font-weight: bold; font-size: 11pt;'>{p_name}:</span>")
+            
+            if tooltip:
+                label.setToolTip(tooltip)
+                
+            p_name_lower = p_name.lower()
+            
+            # 方向选择组件
+            if 'direction' in p_name_lower:
+                widget = QComboBox()
+                widget.addItems(['left', 'right'])
+                if current_val in ['left', 'right']:
+                    widget.setCurrentText(current_val)
+                widget.currentTextChanged.connect(self._update_params_json_from_ui)
+                widget.setToolTip(tooltip)
+                widget.setFixedWidth(70) 
+                self.param_widgets.append({'name': p_name, 'widget': widget, 'type': 'direction'})
+                
+                row1_layout.addWidget(label)
+                row1_layout.addWidget(widget)
+                row1_layout.addSpacing(15)
+                has_row1 = True
+                
+            # 按键选择组件
+            elif 'key' in p_name_lower:
+                widget = QComboBox()
+                widget.setEditable(True)
+                widget.addItems(PYAUTOGUI_KEYS)
+                val_to_set = current_val[0] if isinstance(current_val, list) and len(current_val) > 0 else current_val
+                widget.setCurrentText(str(val_to_set))
+                widget.currentTextChanged.connect(self._update_params_json_from_ui)
+                widget.setToolTip(tooltip)
+                widget.setFixedWidth(110)
+                self.param_widgets.append({'name': p_name, 'widget': widget, 'type': 'key'})
+                
+                row1_layout.addWidget(label)
+                row1_layout.addWidget(widget)
+                row1_layout.addSpacing(15)
+                has_row1 = True
+                
+            # 其他数字组件 (时长, 间隔等)
+            else:
+                widget = QDoubleSpinBox()
+                widget.setRange(0, 99999)
+                widget.setDecimals(1)
+                
+                # 设置步长：默认数值小于3（不包括3），则步长设置为0.2，否则为1
+                try:
+                    d_val = float(default_val)
+                    if d_val < 3:
+                        widget.setSingleStep(0.2)
+                    else:
+                        widget.setSingleStep(1.0)
+                except (ValueError, TypeError):
+                    widget.setSingleStep(1.0)
+
+                try:
+                    widget.setValue(float(current_val))
+                except (ValueError, TypeError):
+                    widget.setValue(0.0)
+                widget.valueChanged.connect(self._update_params_json_from_ui)
+                widget.setToolTip(tooltip)
+                widget.setFixedWidth(70)
+                self.param_widgets.append({'name': p_name, 'widget': widget, 'type': 'number'})
+                
+                row2_layout.addWidget(label)
+                row2_layout.addWidget(widget)
+                row2_layout.addSpacing(15)
+                has_row2 = True
+        
+        row1_layout.addStretch()
+        row2_layout.addStretch()
+
+        if has_row1:
+            self.dynamic_params_layout.addLayout(row1_layout)
+        if has_row2:
+            self.dynamic_params_layout.addLayout(row2_layout)
+
+        self._is_updating_ui = False
+        # 强制同步一次，确保分解框体生成后 JSON和UI的一致性
+        self._update_params_json_from_ui()
+
+    def _clear_layout(self, layout):
+        """递归清空布局中的所有控件"""
+        if layout is not None:
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+                else:
+                    self._clear_layout(item.layout())
+
+    def _get_param_tooltip(self, param_name, explanation):
+        """解析 action_help.json 中对应的参数介绍"""
+        for line in explanation.split('\n'):
+            if line.strip().startswith(f"{param_name}:"):
+                return line.split(':', 1)[1].strip()
+        return "暂无详细说明"
+
+    def _update_params_json_from_ui(self, *args):
+        """用户修改单项输入框后，反向拼接并更新到 JSON 文本框"""
+        if getattr(self, '_is_updating_ui', False): 
+            return
+            
+        new_args = []
+        for item in self.param_widgets:
+            w = item['widget']
+            ptype = item['type']
+            
+            if ptype == 'direction':
+                new_args.append(w.currentText())
+            elif ptype == 'key':
+                # 重新包装为数组以兼容现有系统，即输入框是"a"则保存为 ["a"]
+                new_args.append([w.currentText()])
+            elif ptype == 'number':
+                val = w.value()
+                # 兼容整数的观感，且限制最多 1 位小数
+                if val.is_integer():
+                    new_args.append(int(val))
+                else:
+                    new_args.append(round(val, 1))
+                    
+        # 更新至原有的JSON框，该框负责直接与保存逻辑相通
+        self.params_input.setText(json.dumps(new_args, ensure_ascii=False))
+
+    def save_config(self, show_msg=True):
         try:
-            config_num = self.config_combo.currentText()
+            # 【修改点】：从下拉框获取数据(配置ID)
+            config_num = self.config_combo.currentData()
             if not config_num: return
             
             # 保存 License
@@ -789,7 +958,14 @@ class ConfigEditorGUI(QMainWindow):
                 self.current_config.setdefault('configs', {})[config_num] = {}
             
             cfg = self.current_config['configs'][config_num]
-            cfg['_desc'] = self.config_desc.text()
+            new_desc = self.config_desc.text()
+            cfg['_desc'] = new_desc
+            
+            # 【新增】：更新下拉框当前项的显示文本，同步最新的备注描述
+            display_text = f"{config_num} ({new_desc})" if new_desc else config_num
+            idx = self.config_combo.currentIndex()
+            if idx >= 0:
+                self.config_combo.setItemText(idx, display_text)
             
             # 读取手动编辑的函数名
             func_name = self.func_name_input.text().strip()
@@ -843,7 +1019,8 @@ class ConfigEditorGUI(QMainWindow):
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.current_config, f, indent=2, ensure_ascii=False)
                 
-            QMessageBox.information(self, '✅ 成功', '配置已保存')
+            if show_msg:
+                QMessageBox.information(self, '✅ 成功', '配置已保存')
             
         except Exception as e:
             QMessageBox.critical(self, '错误', str(e))

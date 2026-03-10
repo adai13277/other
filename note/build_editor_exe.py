@@ -13,7 +13,7 @@ def build_editor():
         'pyinstaller',
         '-F',                   # 打包成单个exe
         '-w',                   # 隐藏黑框，纯图形界面
-        '-n', 'ConfigEditor',   # exe名字
+        '-n', '极速枫林(Maple Rush)',   # exe名字
         '--clean',
         '--distpath', '.',      # 输出到当前目录
         

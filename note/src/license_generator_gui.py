@@ -79,8 +79,6 @@ class LicenseGeneratorGUI(QMainWindow):
         self.initUI()
         self.check_keys()
 
-    # 原有的 get_machine_code 静态方法已删除，改用 LicenseValidator.get_machine_fingerprint
-
     def initUI(self):
         """初始化界面"""
         self.setWindowTitle('🔐 AutoFighter License 生成器')

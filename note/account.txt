@@ -1,12 +1,5 @@
 
 
-
-qupu1994@outlook.fr
-mgbc84186A
-mgbc84186
-VCAPPFBGRYDRZ5BH
-
-
 shoulin1973@outlook.fr
 mdqvx6395A
 mdqvx6395
@@ -18,12 +11,8 @@ tclqc39832
 TJZIYNLSAL2P2WUT
 
 
-AlexiaMaggiewah@outlook.dk
-VsH82289m
-======================
 邮箱登录地址：
 https://outlook.live.com/owa，
-
 
 OpheliaElizabethnai@outlook.dk
 vT927ZktLDK8
@@ -54,16 +43,10 @@ curl -I --socks5 127.0.0.1:7897 http://httpbin.org/ip
 查看ip
 curl --socks5 172.18.197.73:7890 https://httpbin.org/ip
 
-
-
 export http_proxy="http://172.18.197.73:7890" \
 export https_proxy="http://172.18.197.73:7890"
 unset http_proxy \
 unset https_proxy
-
-共享文件夹
-
-\\MacdeMacBook-Pro.local
 
 
 
@@ -86,8 +69,29 @@ mysql.server stop: 停止 MySQL.
 github Token
 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
 
+    ,
+    "dir_att": {
+      "desc": "向指定方向攻击，然后瞬移到另一个方向（似乎不实用）",
+      "params": ["direction", "keys", "t1", "t2"],
+      "default_args": ["right", ["a"], 18, 0.1],
+      "param_explanation": "direction: 攻击方向（'left'或'right'）\nkeys: 需要持续按住的按键\nt1: 攻击时间（秒）\nt2: 瞬移时间（秒）"
+    }
+    ,
+    "loop_att3": {
+      "desc": "弓箭手专用，定点站桩输出（暂时弃用，等待完善后重新启用）",
+      "params": ["keys", "t"],
+      "default_args": [["a"], 2],
+      "param_explanation": "keys: 需要持续按住的按键\nt: 单侧站立攻击的时间（秒）\n说明: 弓手专用，左右交替定点攻击"
+    }
+    ,
+    "playDrug": {
+      "desc": "（火毒刷红船专用，暂时弃用，等待完善后重新启用）",
+      "params": ["direction", "t"],
+      "default_args": ["right", 5],
+      "param_explanation": "direction: 方向（'left'或'right'）\nt: 使用毒药的持续时间（秒）"
+    }
 
-https://github.com/NanmiCoder/MediaCrawler.git
+
 
 
 

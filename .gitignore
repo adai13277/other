@@ -12,3 +12,9 @@ note/src/ConfigEditor.exe
 note/src/AutoFighter.exe
 note/anser.txt
 note/auto_fighter.log
+/note/src/LicenseGenerator.exe
+note/question.txt
+note/src/anser.txt
+note/.vscode/settings.json
+note/LicenseGenerator.exe
+note/change_log.txt

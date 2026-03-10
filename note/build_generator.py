@@ -9,7 +9,7 @@ def build_generator():
     # 检测关键依赖文件是否存在
     # 因为生成器严重依赖这两个文件，如果不存在打包会成功但无法运行
     required_files = ['license_validator.py', 'generate_license.py']
-    missing = [f for f in required_files if not os.path.exists(f) and not os.path.exists(os.path.join('tools', f))]
+    missing = [f for f in required_files if not (os.path.exists(f) or os.path.exists(os.path.join('src', 'tools', f)))]
     
     if missing:
         print(f"\n⚠️  警告: 未找到依赖文件: {missing}")

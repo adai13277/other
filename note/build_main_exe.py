@@ -16,6 +16,9 @@ def build_fighter():
         '-n', 'AutoFighter',    # exe名字
         '--clean',              # 清理缓存
         '--distpath', '.',      # 输出到当前目录，方便直接调试
+        '--exclude-module', 'action_driver',  # 排除 action_driver 模块
+        # 【新增】强制打包外部脚本需要的第三方库
+        '--hidden-import', 'pyautogui',
         'src/main.py'           # 入口文件
     ]
     

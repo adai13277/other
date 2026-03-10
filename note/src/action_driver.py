@@ -182,12 +182,12 @@ class ActionDriver:
         self.press('space', delay=0.5)
 
     @action_meta("法师专用：左右瞬移攻击 + 两端定点攻击")
-    def loop_att1(self, keys, dt, at):
+    def loop_att1(self, keys, tp_key, dt, at):
         self.keys_down(keys)
         for direction in ['left', 'right']:
             if self.stop_event.is_set(): break
             other = self.get_other_direction(direction)
-            self.attack([direction, 'd'], dt)
+            self.attack([direction] + tp_key, dt)
             self.attack([other], at)
         self.keys_up(keys)
 
@@ -229,15 +229,20 @@ class ActionDriver:
             self.keys_up([direction])
             
     @action_meta("法师专用：两边拉怪+中间清怪")
-    def mage_attack(self, stand_t, move_t):
+    def mage_attack(self, keys, tp_key, stand_t, move_t):
         for direction in ['left', 'right']:
             if self.stop_event.is_set(): break
             other_direction = self.get_other_direction(direction)
-            self.ran_move_attack(['a'], stand_t)
-            self.attack([direction, 'a', 'd'], move_t * 1)
-            self.ran_move_attack(['a'], move_t * 0.2)
-            self.attack([direction, 'a', 'd'], move_t * 1)
-            self.attack([other_direction, 'a', 'd'], move_t * 0.8)
+            
+            # keys 通常是一个列表，如 ['a']
+            # tp_key 通常是一个字符串，如 'd'
+            
+            self.ran_move_attack(keys, stand_t)
+
+            self.attack([direction] + keys + tp_key, move_t * 1)
+            self.ran_move_attack(keys, move_t * 0.2)
+            self.attack([direction] + keys + tp_key, move_t * 1)
+            self.attack([other_direction] + keys + tp_key, move_t * 0.8)
 
     #在一个总的tt内，按住keys键，在短时间内快速左右移动,移动范围缩放Scale
     def ran_move_attack(self, keys, tt, scale=0.8):
@@ -265,14 +270,38 @@ class ActionDriver:
         self.press('up', duration=t)
         self.press('down', duration=t)
 
-    @action_meta("战士专用 - 单方向长巡回 + 持续攻击")
-    def warrior_loop_attack(self, keys, total_time, move_interval, attack_duration):
+    @action_meta("战士专用 - 左右移动巡回攻击")
+    def warrior_loop_attack(self, keys, rush_key, count, move_time, attack_time):
         for direction in ['left', 'right']:
             if self.stop_event.is_set():
                 break
-            start_time = time.time()
-            while time.time() - start_time < total_time:
+            for _ in range(int(count)):
                 if self.stop_event.is_set():
                     break
-                self.hold_keys([direction], move_interval)
-                self.hold_keys(keys, attack_duration)
+                move_keys = [direction]
+                if rush_key:
+                    move_keys += rush_key
+                self.hold_keys(move_keys, move_time)
+                self.hold_keys(keys, attack_time)
+
+    @action_meta("刀飞专用 - 巡回分身术+金钱炸弹(可选跳跃/落叶斩)")
+    def daofei_loop_attack(self, keys, jump_key, boom_key, luoye_key, count, fenshen_time):
+        for direction in ['left', 'right']:
+            if self.stop_event.is_set():
+                break
+            actual_jump = jump_key if jump_key else []
+            for _ in range(int(count)):
+                if self.stop_event.is_set():
+                    break
+                
+                # 如果配置了落叶斩，则先释放落叶斩
+                if luoye_key:
+                    self.hold_keys([direction] + actual_jump + luoye_key, 0.18)
+
+                # 按住方向、跳跃键(如果存在)和分身术键，持续时间从参数传入
+                self.hold_keys([direction] + actual_jump + keys, fenshen_time)
+                # 按住方向、跳跃键(如果存在)和金钱炸弹键，持续时间固定为0.5秒
+                self.hold_keys([direction] + actual_jump + boom_key, 0.5)
+
+    
+    
