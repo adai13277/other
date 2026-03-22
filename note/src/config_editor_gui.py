@@ -29,6 +29,7 @@ P76rQvsDyu+9xc69ovkNEdku2zONlr+/jw77CHFD3R/LMJvzh+zyLSULA+wx6ScL
 
 # ================= 支持的按键列表 =================
 PYAUTOGUI_KEYS = [
+    '',
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
     'q','w','e','r','t','y',
     'a','s','d','f','g',

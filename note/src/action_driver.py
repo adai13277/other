@@ -164,6 +164,12 @@ class ActionDriver:
     def attack(self, keys, t):
         self.hold_keys(keys, t)
 
+    def half_auto(self, keys,key1,key2,t):
+        self._register_keys_down(keys)
+        if len(key1) > 0:
+            self._press_keys_continue2(key1,)
+        self._register_keys_up(keys)
+
     @action_meta("向direction攻击t1秒后，向另一个方向瞬移t2秒")
     def dir_att(self,direction:str,keys:str,t1:float,t2:float):
         other_direction = self.get_other_direction(direction)
@@ -195,7 +201,15 @@ class ActionDriver:
         pyautogui.press(key)
         self.wait(interval)
 
+    # 在一个总的时间t内，根据间隔interval交替按下keys中的键
     def _press_keys_continue(self, keys: str, t: float , interval: float = 0.1):
+        current_time = time.time()
+        while time.time() - current_time < t:
+            for key in keys:
+                self._press_key(key, interval)
+    
+    # 在一个总的时间t内，根据间隔interval持续按下keys中的键
+    def _press_keys_continue2(self, keys: str, t: float , interval: float = 0.1):
         current_time = time.time()
         while time.time() - current_time < t:
             for key in keys:
@@ -302,6 +316,27 @@ class ActionDriver:
                 self.hold_keys([direction] + actual_jump + keys, fenshen_time)
                 # 按住方向、跳跃键(如果存在)和金钱炸弹键，持续时间固定为0.5秒
                 self.hold_keys([direction] + actual_jump + boom_key, 0.5)
+    
+    @action_meta("火枪专用 - 巡回使用滑步+攻击技能")
+    def gum_attack(self, keys, jump_key, slide_key, looptime, interval):
+
+        actual_jump = jump_key if jump_key else []
+
+        if len(actual_jump) > 0:
+            self.hold_keys(actual_jump, 0.2)
+
+        self._register_keys_down(keys)
+        for direction in ['left', 'right']:
+            self._register_keys_down([direction])
+            if self.stop_event.is_set():
+                break
+            
+            # self.hold_keys([direction] , looptime)
+            self._press_keys_continue2(slide_key,looptime,interval)
+
+            self._register_keys_up([direction])
+         
+        self._register_keys_up(keys)
 
     
     

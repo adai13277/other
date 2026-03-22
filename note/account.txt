@@ -125,11 +125,6 @@ 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
 git clone https://adai13277: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@github.com/adai13277/other.git
 
 
-知网
-4516946623136
-5407548
-
-
 mysql.server start：启动 MySQL 服务器。
 mysql.server stop: 停止 MySQL.
 
@@ -138,7 +133,6 @@ github Token
 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
 
 
-https://github.com/NanmiCoder/MediaCrawler.git
 
 
 

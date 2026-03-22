@@ -3,7 +3,7 @@
     "key": "eyJwYXlsb2FkIjogImV5SmxlSEJwY21GMGFXOXVJam9nSWpJd01qWXRNRFF0TURNZ01UVTZNemdpTENBaVptbHVaMlZ5Y0hKcGJuUWlPaUFpUVU1WlgwUkZWa2xEUlNJc0lDSnViMjVqWlNJNklDSXhOemN5TmpNNE56SXdMakV6TmpneU1TSXNJQ0p5WlhGMWFYSmxYMlJsZG1salpWOWlhVzVrYVc1bklqb2dabUZzYzJWOSIsICJzaWduYXR1cmUiOiAiVWlyek8zUlBxQTBBN0tmNzhWRVZUUjN5ZkNPZHhnRmJRQnJ5ZGNaNVBBREZZTXpPb1ZkREhTK2J0M3JnMHVXYVBmVUMyOFFsbVorcHB4NGIxcUhHZDc1d3NSdHZqcnVvMDRldCtGMzhhWnpoR1pUSWxlU2l6YXI2QWdGQ05uUWR5Rmh3a0UxaXlPSVB5Ni9jMXJqT2FtdjRKVVdwWCtFUStKeUdBR092eUpwZElRUjI5NUlucTVOVXhTSzZLeHFSbXNIOFIyRGlIR2ZlS3IxOURPaEJWbWlpenBLYVJlTFVJY1VPc2FwaFdDUU10RzJRVXFLUm9SS0FxOTA3a2Q4blZDdXdENUlwVWRFNkc0SWxVV1p0ejd0TllQem5TNVVmMTRNdkQ4aXJtLy9JcEF1VmwyNVpMeHNvcWxPMzVvNjEwaFdrdGxxU2FGYjdpSktrS1NQZlZBPT0ifQ==",
     "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp+qN2nLs9rqI3C623SLf\nPTGUEhvzwDu3z1an4wAvpHPbAt+06oQwTxJZ5IXOx4Id29jQxexd7hMdLYFUw8s1\n1dxgei8n/SlVSxfj6sNqj1p37YfUkVFpy88fOPTFmZ1GYkbhsh67ybAwVqaJJUS9\nDTS5Fd2ET88zk8gHZ9fo4nNPvkPX+gTotGK93yyck2BO2JB5OxXq9ZYc6ROUqZC3\npmLQ4Hyb+B5DXTo/yDBLoPX/nBGc0UvJIRBs/Q0NlMKIF/5lw+8vtZNE568xg2Vi\nP76rQvsDyu+9xc69ovkNEdku2zONlr+/jw77CHFD3R/LMJvzh+zyLSULA+wx6ScL\n+QIDAQAB\n-----END PUBLIC KEY-----"
   },
-  "use_config": "1",
+  "use_config": "3",
   "configs": {
     "1": {
       "_desc": "方案1",
@@ -11,22 +11,17 @@
       "is_buff": true,
       "action_sequence": [
         {
-          "function": "daofei_loop_attack1",
+          "function": "warrior_loop_attack",
           "args": [
             [
               "a"
             ],
             [
-              "space"
-            ],
-            [
-              "s"
-            ],
-            [
-              "d"
+              ""
             ],
             2,
-            2.2
+            0.8,
+            2
           ]
         }
       ],
@@ -38,26 +33,30 @@
       "is_buff": true,
       "action_sequence": [
         {
-          "function": "daofei_loop_attack1",
+          "function": "loop_att",
           "args": [
             [
               "a"
             ],
-            [
-              "space"
-            ],
-            [
-              "s"
-            ],
-            [
-              "d"
-            ],
-            3,
-            1.8
+            5,
+            5
           ]
         }
       ],
-      "SHORTCUTS": []
+      "SHORTCUTS": [
+        {
+          "key": "1",
+          "interval": 10,
+          "type": "non_stun",
+          "delay_enabled": false
+        },
+        {
+          "key": "2",
+          "interval": 6,
+          "type": "non_stun",
+          "delay_enabled": false
+        }
+      ]
     },
     "3": {
       "_desc": "方案3（最多保存4个方案）",
@@ -65,43 +64,45 @@
       "is_buff": true,
       "action_sequence": [
         {
-          "function": "loop_att1",
+          "function": "attack",
           "args": [
             [
               "a"
             ],
-            [
-              "d"
-            ],
-            2,
-            0
+            3
           ]
         }
       ],
       "SHORTCUTS": [
         {
           "key": "q",
-          "interval": 180,
+          "interval": 888,
           "type": "stun",
           "delay_enabled": true
         },
         {
           "key": "w",
-          "interval": 555,
+          "interval": 888,
           "type": "stun",
           "delay_enabled": true
         },
         {
           "key": "e",
-          "interval": 300,
+          "interval": 888,
           "type": "stun",
           "delay_enabled": true
         },
         {
           "key": "r",
-          "interval": 600,
+          "interval": 888,
           "type": "stun",
           "delay_enabled": true
+        },
+        {
+          "key": "d",
+          "interval": 0,
+          "type": "non_stun",
+          "delay_enabled": false
         }
       ]
     },

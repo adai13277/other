@@ -37,16 +37,22 @@
       "param_explanation": "t: 每间隔t秒按一次上/下的方向键，防止掉线\n说明: 用于挂buff时，可放在绳子上，每间隔t秒按一下上/下方向键,当半自动时，可在挂在后台用于自动挂无硬直的buff，如回血回蓝、吃药丸，也可用于接管某个技能按键（即压键盘），方法是将该按键设置为一个间隔为零的无硬直buff"
     },
     "warrior_loop_attack": {
-      "desc": "战士专用 - 左右移动巡回攻击",
+      "desc": "战士专用 - 巡回使用攻击技能+突进",
       "params": ["keys", "rush_key", "count", "move_time", "attack_time"],
       "default_args": [["a"], ["d"], 3, 1, 3],
       "param_explanation": "keys: 技能按键\nrush_key: 突进技能按键（若为空则使用方向键移动，若不为空则按住方向键+突进键移动）\ncount: 每次巡回攻击的轮数,轮数越多循环范围越大\nmove_time: 每次小步移动的时间（秒），时间越长，巡回范围越大\nattack_time: 每次站桩攻击的时间（秒），根据角色伤害适当调整，伤害高就适当调低\n说明: 适合战士的近身攻击技能，也可用于二转刀飞的神偷术，程序会自动控制角色左右移动并在每次移动后站桩攻击，形成持续的巡回攻击效果"
     },
     "daofei_loop_attack": {
-      "desc": "刀飞专用 - 巡回分身术+金钱炸弹(可选跳跃/落叶斩)",
+      "desc": "刀飞专用 - 巡回使用分身术+金钱炸弹(可选跳跃/落叶斩)",
       "params": ["keys", "jump_key", "boom_key", "luoye_key", "count", "fenshen_time"],
       "default_args": [["a"], ["space"], ["s"], [], 3, 1.8],
-      "param_explanation": "keys: 分身术技能按键\njump_key: 跳跃键(不配置则不跳跃)\nboom_key: 金钱炸弹按键\nluoye_key: 落叶斩按键(不配置则不放落叶斩)\ncount: 每次巡回攻击的轮数,轮数越多循环范围越大\nfenshen_time: 每次分身术按住的持续时间（秒）,时间越长循环范围越大\n说明: 每一小轮攻击遵循 [落叶斩]->分身术x秒->金钱炸弹 的顺序进行"
+      "param_explanation": "keys: 分身术技能按键\njump_key: 跳跃键(不配置则不跳跃)\nboom_key: 金钱炸弹按键\nluoye_key: 落叶斩按键(不配置则不放落叶斩)\ncount: 每次巡回攻击的轮数,轮数越多循环范围越大\nfenshen_time: 每次分身术按住的持续时间（秒）,时间越长循环范围越大\n说明: 每一小轮攻击循环遵循 [落叶斩]->分身术x秒->金钱炸弹 的顺序进行"
+    },
+    "gum_attack": {
+      "desc": "火枪专用 - 巡回使用滑步+攻击技能",
+      "params": ["keys", "jump_key", "slide_key", "loop_time", "interval"],
+      "default_args": [["w"], ["q"], ["e"],  4, 0],
+      "param_explanation": "keys: 攻击技能按键(火枪输出技能)\njump_key: 跳跃键(不配置则不跳跃)\nslide_key: 火枪的滑步技能按键(后坐力射击)\nloop_time: 每一轮巡回的时间（秒）,影响巡回范围时间越长循环范围越大\ninterval: 每次按滑步的时间间隔（秒），间隔越小滑的越快，巡回范围也越大，为0最快，如果要慢一点一般为0.1\n说明: 每次循环遵循 跳跃->攻击技能+滑步x秒 的顺序进行,翅膀技能要提前在buff设置里面设置好，注意其时间要大于冷却时间，比如冷却30s，最好设置为32s，否则会出现翅膀技能没消失就又被按了，导致技能被取消使用的情况"
     }
   }
 }
